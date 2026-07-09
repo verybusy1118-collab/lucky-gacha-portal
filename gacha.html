@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>幸運扭蛋機 - 老師抽籤</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f0fdf4; /* 淺綠色背景 */
+            background-image: radial-gradient(#dcfce7 2px, transparent 2px);
+            background-size: 30px 30px;
+            overflow-x: hidden;
+        }
+
+        /* 扭蛋機特效與動畫 */
+        .gacha-machine {
+            filter: drop-shadow(0 20px 13px rgba(0, 0, 0, 0.2));
+            transition: transform 0.1s;
+        }
+        
+        .gacha-machine.shake {
+            animation: machineShake 0.4s ease-in-out;
+        }
+
+        @keyframes machineShake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-5px) rotate(-2deg); }
+            40% { transform: translateX(5px) rotate(2deg); }
+            60% { transform: translateX(-5px) rotate(-2deg); }
+            80% { transform: translateX(5px) rotate(2deg); }
+        }
+
+        .knob {
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .knob.spinning {
+            transform: rotate(360deg);
+        }
+
+        /* 扭蛋球動畫 */
+        .capsule {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) scale(0);
+            opacity: 0;
+            z-index: 10;
+        }
+
+        .capsule.drop {
+            animation: dropCapsule 1.5s forwards cubic-bezier(0.36, 0, 0.66, -0.56);
+        }
+
+        @keyframes dropCapsule {
+            0% { transform: translateX(-50%) translateY(-20px) scale(0); opacity: 0; }
+            30% { transform: translateX(-50%) translateY(30px) scale(1.2); opacity: 1; }
+            50% { transform: translateX(-50%) translateY(20px) scale(1); opacity: 1; }
+            80% { transform: translateX(-50%) translateY(20px) scale(1.1); opacity: 1; filter: brightness(1.2); }
+            100% { transform: translateX(-50%) translateY(20px) scale(0); opacity: 0; } /* 縮小消失並叫出 Modal */
+        }
+
+        /* 模態框彈出動畫 */
+        .modal-pop {
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* 玻璃罩反光 */
+        .glass-reflection {
+            background: linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 50%);
+        }
+
+        /* 內部靜態小扭蛋 */
+        .mini-ball {
+            position: absolute;
+            border-radius: 50%;
+            box-shadow: inset -5px -5px 10px rgba(0,0,0,0.2), inset 2px 2px 5px rgba(255,255,255,0.5);
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        .mini-ball::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: rgba(0,0,0,0.1);
+            transform: translateY(-50%);
+        }
+
+        /* 扭蛋攪拌動畫 */
+        .mixing {
+            animation: mixAnimation 0.3s infinite alternate cubic-bezier(0.45, 0, 0.55, 1);
+        }
+
+        @keyframes mixAnimation {
+            0% { transform: translate(0, 0) rotate(var(--start-rot)); }
+            100% { transform: translate(var(--mix-x), var(--mix-y)) rotate(var(--mix-r)); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-10 relative">
+
+    <!-- 設定後台的按鈕 -->
+    <button onclick="openSettings()" class="fixed top-4 right-4 bg-white/80 hover:bg-white p-3 rounded-full shadow-md z-20 transition-transform hover:scale-110" title="後台設定">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+    </button>
+
+    <div class="text-center mb-8 z-10">
+        <h1 class="text-4xl md:text-5xl font-black text-emerald-700 drop-shadow-md mb-2 tracking-wider">🎉 歡樂扭蛋機 🎉</h1>
+        <p class="text-gray-600 font-bold bg-white/80 px-4 py-1 rounded-full inline-block shadow-sm">
+            剩餘名額: <span id="remainCount" class="text-rose-500 text-xl">15</span>
+        </p>
+    </div>
+
+    <!-- 左右排版容器 -->
+    <div class="flex flex-col lg:flex-row justify-center items-start gap-12 w-full max-w-6xl px-6 z-10">
+        
+        <!-- 左側：扭蛋機與重置按鈕 -->
+        <div class="flex flex-col items-center shrink-0 w-full lg:w-auto">
+            <div class="relative w-80 h-[28rem] gacha-machine flex flex-col items-center">
+                <!-- 頂部招牌 -->
+                <div class="absolute -top-6 bg-yellow-400 border-4 border-yellow-600 text-yellow-900 font-bold py-1 px-8 rounded-full shadow-lg z-20 transform -rotate-2">
+                    LUCKY GACHA
+                </div>
+
+                <!-- 玻璃罩 (包含裡面的小球) -->
+                <div class="w-64 h-64 bg-cyan-50/80 border-4 border-b-0 border-gray-300 rounded-t-[100px] relative overflow-hidden shadow-inner flex justify-center items-end pb-2" id="dome">
+                    <!-- 玻璃反光 -->
+                    <div class="absolute inset-0 glass-reflection z-10 pointer-events-none"></div>
+                    
+                    <!-- 內部扭蛋 (由 JS 生成) -->
+                    <div id="ballsContainer" class="w-full h-full relative"></div>
+                </div>
+
+                <!-- 機器底座 -->
+                <div class="w-72 h-48 bg-rose-500 rounded-b-[40px] border-4 border-gray-300 relative shadow-xl flex flex-col items-center justify-start pt-4">
+                    <div class="absolute top-0 left-4 w-4 h-full bg-white/20 skew-x-12"></div> <!-- 立體光澤 -->
+                    
+                    <!-- 投幣/裝飾文字 -->
+                    <div class="text-white/80 text-xs font-black tracking-widest mb-2">INSERT COIN</div>
+
+                    <!-- 旋鈕 -->
+                    <div class="relative flex justify-center items-center cursor-pointer group" onclick="playGacha()">
+                        <div class="w-20 h-20 bg-gray-200 rounded-full border-4 border-gray-400 shadow-inner flex justify-center items-center">
+                            <div id="knob" class="w-14 h-14 bg-gray-100 rounded-full border-2 border-gray-300 shadow-[0_4px_6px_rgba(0,0,0,0.3)] flex justify-center items-center knob">
+                                <div class="w-8 h-2 bg-gray-400 rounded-full"></div>
+                            </div>
+                        </div>
+                        <div class="absolute -right-16 bg-yellow-400 text-yellow-900 text-sm font-bold py-1 px-3 rounded-lg shadow-md animate-bounce pointer-events-none group-hover:scale-110 transition-transform">
+                            按我抽籤!
+                        </div>
+                    </div>
+
+                    <!-- 出口槽 -->
+                    <div class="w-24 h-12 bg-gray-800 rounded-t-lg rounded-b-2xl mt-4 border-t-4 border-gray-900 shadow-inner relative overflow-hidden flex justify-center">
+                        <div class="w-20 h-2 bg-black absolute top-0 opacity-50"></div>
+                        <!-- 掉出來的扭蛋動畫元件 -->
+                        <div id="droppingCapsule" class="capsule"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 flex gap-4">
+                <button onclick="resetMachine()" class="px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white font-bold rounded-full shadow-md transition-colors flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" /></svg>
+                    重置機器
+                </button>
+            </div>
+        </div>
+
+        <!-- 右側：抽籤紀錄 -->
+        <div class="w-full flex-1 bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-lg mt-8 lg:mt-0 lg:max-h-[600px] flex flex-col">
+            <h2 class="text-xl font-bold text-gray-700 mb-4 border-b-2 border-emerald-200 pb-2 flex items-center gap-2 shrink-0">
+                📜 抽籤紀錄
+            </h2>
+            <div id="historyList" class="flex flex-wrap gap-3 overflow-y-auto content-start flex-1 pr-2">
+                <p class="text-gray-400 italic text-sm w-full text-center" id="emptyHistoryMsg">目前還沒有抽籤紀錄哦！</p>
+                <!-- 歷史紀錄標籤將動態生成於此 -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 後台設定彈出視窗 -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden justify-center items-center z-50">
+        <div class="bg-white w-11/12 max-w-2xl max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col modal-pop border-4 border-gray-200">
+            <div class="bg-gray-100 py-4 px-6 border-b flex justify-between items-center">
+                <h2 class="text-2xl font-black text-gray-800">⚙️ 扭蛋機後台設定</h2>
+                <button onclick="closeSettings()" class="text-gray-500 hover:text-red-500 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto flex-1">
+                <!-- 新增參與者 -->
+                <div class="bg-emerald-50 p-4 rounded-xl mb-6 border border-emerald-100 flex gap-2 items-end flex-wrap">
+                    <div class="flex-1 min-w-[120px]">
+                        <label class="block text-sm font-bold text-gray-700 mb-1">學校 / 單位</label>
+                        <input type="text" id="newSchool" placeholder="例如：快樂國小" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-400 outline-none">
+                    </div>
+                    <div class="flex-1 min-w-[120px]">
+                        <label class="block text-sm font-bold text-gray-700 mb-1">姓名</label>
+                        <input type="text" id="newName" placeholder="例如：王小明" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-400 outline-none">
+                    </div>
+                    <button onclick="addTeacherFromUI()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-colors h-[42px] mt-2 sm:mt-0">
+                        新增
+                    </button>
+                </div>
+
+                <!-- 參與者列表 -->
+                <h3 class="font-bold text-gray-700 mb-2 flex justify-between items-end">
+                    <span>目前名單 (<span id="settingsCount">0</span> 人)</span>
+                    <span class="text-xs text-gray-400 font-normal">儲存後才會正式生效</span>
+                </h3>
+                <div class="bg-gray-50 border rounded-xl overflow-hidden">
+                    <div class="max-h-64 overflow-y-auto p-2" id="settingsList">
+                        <!-- 動態生成 -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-gray-50 py-4 px-6 border-t flex justify-end gap-3 flex-wrap">
+                <button onclick="resetToDefault()" class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold rounded-xl transition-colors text-sm">
+                    恢復預設名單
+                </button>
+                <button onclick="saveSettings()" class="px-8 py-2 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-xl shadow-md transition-colors">
+                    儲存並套用
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 抽中結果的彈出視窗 -->
+    <div id="resultModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden justify-center items-center z-50">
+        <div class="bg-white w-11/12 max-w-md rounded-3xl shadow-2xl overflow-hidden text-center modal-pop border-4 border-yellow-400">
+            <div class="bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 py-6 relative">
+                <h2 class="text-3xl font-black text-white drop-shadow-md tracking-widest">抽中的幸運VIP</h2>
+                <!-- 裝飾用星星 -->
+                <div class="absolute top-4 left-4 text-white text-2xl animate-spin" style="animation-duration: 3s;">✨</div>
+                <div class="absolute bottom-4 right-4 text-white text-2xl animate-spin" style="animation-duration: 4s;">✨</div>
+            </div>
+            
+            <div class="p-8">
+                <p class="text-gray-500 text-lg font-bold mb-2">抽中的老師是：</p>
+                <div class="bg-green-50 rounded-2xl p-6 border-2 border-green-200 mb-6 shadow-inner">
+                    <p id="resultSchool" class="text-emerald-600 font-bold text-xl mb-1"></p>
+                    <p id="resultName" class="text-4xl font-black text-gray-800 tracking-wider"></p>
+                </div>
+                
+                <button onclick="closeModal()" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-xl rounded-xl shadow-lg transform transition active:scale-95">
+                    確認收下
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 預設老師資料清單
+        const defaultTeachers = [
+            { school: '文德國小', name: '林0琪' },
+            { school: '海山國小', name: '周0萱' },
+            { school: '大同國小', name: '陳0娜' },
+            { school: '有木國小', name: '張0琇' },
+            { school: '復興國小', name: '王0賢' },
+            { school: '景新國小', name: '曾0燁' },
+            { school: '永平國小', name: '林0良' },
+            { school: '永平國小', name: '薛0珊' },
+            { school: '及人國小', name: '俞0辰' },
+            { school: '及人國小', name: '林0津' },
+            { school: '及人國小', name: '賴0歆' },
+            { school: '大坪國小', name: '尹0均' },
+            { school: '大坪國小', name: '黃0怡' },
+            { school: '興化國小', name: '劉0階' },
+            { school: '豐年國小', name: '陳0行' }
+        ];
+
+        // 從 LocalStorage 載入，若無則使用預設清單
+        let initialTeachers = JSON.parse(localStorage.getItem('gachaTeachers')) || JSON.parse(JSON.stringify(defaultTeachers));
+
+        // 扭蛋顏色庫
+        const colors = [
+            'bg-red-400', 'bg-blue-400', 'bg-green-400', 
+            'bg-yellow-400', 'bg-purple-400', 'bg-pink-400', 'bg-orange-400'
+        ];
+
+        // 狀態變數
+        let availableTeachers = [...initialTeachers];
+        let history = [];
+        let isAnimating = false;
+
+        // 音效相關變數 (Tone.js)
+        let isToneInitialized = false;
+        let fmSynth, polySynth, noiseSynth;
+
+        // DOM 元素
+        const ballsContainer = document.getElementById('ballsContainer');
+        const remainCountEl = document.getElementById('remainCount');
+        const machineEl = document.querySelector('.gacha-machine');
+        const knobEl = document.getElementById('knob');
+        const droppingCapsule = document.getElementById('droppingCapsule');
+        const resultModal = document.getElementById('resultModal');
+        const resultSchool = document.getElementById('resultSchool');
+        const resultName = document.getElementById('resultName');
+        const historyList = document.getElementById('historyList');
+        const emptyHistoryMsg = document.getElementById('emptyHistoryMsg');
+        
+        // 後台 DOM 元素
+        const settingsModal = document.getElementById('settingsModal');
+        const settingsList = document.getElementById('settingsList');
+        const settingsCount = document.getElementById('settingsCount');
+        const newSchoolInput = document.getElementById('newSchool');
+        const newNameInput = document.getElementById('newName');
+        let tempTeachers = []; // 編輯中的清單
+
+        // --- 後台設定邏輯 ---
+        function openSettings() {
+            if (isAnimating) {
+                showCustomMessage("機器運轉中，請稍後再開啟後台！");
+                return;
+            }
+            
+            // 密碼驗證
+            const pwd = prompt("請輸入管理員密碼：");
+            if (pwd !== "666") {
+                if (pwd !== null) {
+                    alert("密碼錯誤，拒絕存取！");
+                }
+                return;
+            }
+
+            tempTeachers = JSON.parse(JSON.stringify(initialTeachers)); // 複製一份編輯
+            renderSettingsList();
+            settingsModal.classList.remove('hidden');
+            settingsModal.classList.add('flex');
+        }
+
+        function closeSettings() {
+            settingsModal.classList.add('hidden');
+            settingsModal.classList.remove('flex');
+        }
+
+        function renderSettingsList() {
+            settingsCount.textContent = tempTeachers.length;
+            settingsList.innerHTML = '';
+            
+            if (tempTeachers.length === 0) {
+                settingsList.innerHTML = '<div class="text-center py-4 text-gray-400">目前沒有參與者</div>';
+                return;
+            }
+            
+            tempTeachers.forEach((teacher, index) => {
+                const item = document.createElement('div');
+                item.className = 'flex justify-between items-center bg-white border mb-2 p-2 rounded shadow-sm hover:shadow-md transition-shadow';
+                item.innerHTML = `
+                    <div class="flex gap-2 overflow-hidden flex-1 mr-2">
+                        <input type="text" value="${teacher.school}" onchange="updateTeacherTemp(${index}, 'school', this.value)" class="w-1/2 px-2 py-1 border border-transparent hover:border-gray-300 focus:border-emerald-400 focus:bg-white bg-gray-50 rounded outline-none transition-colors text-gray-600 text-sm" placeholder="學校/單位">
+                        <input type="text" value="${teacher.name}" onchange="updateTeacherTemp(${index}, 'name', this.value)" class="w-1/2 px-2 py-1 border border-transparent hover:border-gray-300 focus:border-emerald-400 focus:bg-white bg-gray-50 rounded outline-none transition-colors font-bold text-gray-800" placeholder="姓名">
+                    </div>
+                    <button onclick="removeTeacherFromSettings(${index})" class="text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 p-1.5 rounded transition-colors" title="刪除">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                    </button>
+                `;
+                settingsList.appendChild(item);
+            });
+        }
+
+        function updateTeacherTemp(index, field, value) {
+            tempTeachers[index][field] = value.trim();
+        }
+
+        function addTeacherFromUI() {
+            const school = newSchoolInput.value.trim();
+            const name = newNameInput.value.trim();
+            if (!name) {
+                showCustomMessage("請至少輸入參與者姓名！");
+                return;
+            }
+            tempTeachers.unshift({ school: school || '無', name: name }); // 加到最前面
+            newSchoolInput.value = '';
+            newNameInput.value = '';
+            renderSettingsList();
+            newSchoolInput.focus();
+        }
+
+        function removeTeacherFromSettings(index) {
+            tempTeachers.splice(index, 1);
+            renderSettingsList();
+        }
+
+        function resetToDefault() {
+            if (confirm("確定要恢復預設的初始名單嗎？這將會清空您自己新增的人員。")) {
+                tempTeachers = JSON.parse(JSON.stringify(defaultTeachers));
+                renderSettingsList();
+            }
+        }
+
+        function saveSettings() {
+            if (tempTeachers.length === 0) {
+                if (!confirm("您設定的名單是空的，確定要儲存嗎？")) return;
+            }
+            
+            // 儲存至全域並寫入 LocalStorage
+            initialTeachers = JSON.parse(JSON.stringify(tempTeachers));
+            localStorage.setItem('gachaTeachers', JSON.stringify(initialTeachers));
+            
+            closeSettings();
+            resetMachine(); // 強制重置機器以套用新名單
+            showCustomMessage("✅ 名單已儲存並成功套用！");
+        }
+
+        // --- 扭蛋機核心邏輯 ---
+
+        // 初始化視覺扭蛋球
+        function initBalls() {
+            ballsContainer.innerHTML = '';
+            // 根據人數生成小球，最多 50 顆裝飾
+            const visualCount = Math.min(availableTeachers.length, 50); 
+            for(let i = 0; i < visualCount; i++) {
+                const ball = document.createElement('div');
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                ball.className = `mini-ball w-12 h-12 ${color}`;
+                
+                // 隨機位置與角度
+                const bottom = Math.random() * 40; // 集中在底部
+                const left = 5 + Math.random() * 80; // 避免太靠邊
+                const rotate = Math.random() * 360;
+                const zIndex = Math.floor(Math.random() * 10);
+
+                ball.style.bottom = `${bottom}%`;
+                ball.style.left = `${left}%`;
+                ball.style.setProperty('--start-rot', `${rotate}deg`);
+                ball.style.transform = `rotate(${rotate}deg)`;
+                ball.style.zIndex = zIndex;
+
+                ballsContainer.appendChild(ball);
+            }
+        }
+
+        // 隨機打亂陣列 (Fisher-Yates Shuffle)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // 初始化 Tone.js 音效
+        async function initAudio() {
+            if (!isToneInitialized) {
+                await Tone.start();
+                
+                fmSynth = new Tone.FMSynth().toDestination();
+                fmSynth.volume.value = -8;
+
+                polySynth = new Tone.PolySynth(Tone.Synth).toDestination();
+                polySynth.volume.value = -5;
+
+                noiseSynth = new Tone.NoiseSynth({
+                    noise: { type: 'pink' },
+                    envelope: { attack: 0.01, decay: 0.1, sustain: 0 }
+                }).toDestination();
+                noiseSynth.volume.value = -10;
+
+                isToneInitialized = true;
+            }
+        }
+
+        // 轉動旋鈕音效
+        function playCrankSound() {
+            if(!isToneInitialized) return;
+            let now = Tone.now();
+            for(let i=0; i<5; i++) {
+                noiseSynth.triggerAttackRelease("16n", now + i * 0.1);
+                fmSynth.triggerAttackRelease("C3", "32n", now + i * 0.1);
+            }
+        }
+
+        // 扭蛋掉落音效
+        function playDropSound() {
+            if(!isToneInitialized) return;
+            let now = Tone.now();
+            fmSynth.triggerAttackRelease("C5", "8n", now);
+            fmSynth.frequency.rampTo("C2", 0.5, now);
+        }
+
+        // 歡呼中獎音效
+        function playTadaSound() {
+            if(!isToneInitialized) return;
+            let now = Tone.now();
+            polySynth.triggerAttackRelease(["C4", "E4", "G4"], "8n", now);
+            polySynth.triggerAttackRelease(["C4", "E4", "G4", "C5"], "2n", now + 0.2);
+        }
+
+        // 執行抽籤
+        async function playGacha() {
+            // 防止動畫重疊或無名額
+            if (isAnimating) return;
+            if (availableTeachers.length === 0) {
+                // 使用自訂的提示框代替 alert
+                showCustomMessage("已經全部抽完囉！請點擊重置機器。");
+                return;
+            }
+
+            isAnimating = true;
+
+            // 初始化音效 (因為瀏覽器安全性規定，必須在使用者點擊事件中啟動音頻)
+            await initAudio();
+
+            // 1. 旋鈕旋轉動畫 + 音效
+            knobEl.classList.add('spinning');
+            playCrankSound();
+            
+            // 2. 機器震動動畫
+            setTimeout(() => {
+                machineEl.classList.add('shake');
+            }, 200);
+
+            // 啟動內部扭蛋攪拌動畫
+            const miniBalls = document.querySelectorAll('#ballsContainer .mini-ball');
+            miniBalls.forEach(ball => {
+                // 給予隨機的彈跳 X, Y 軸距離與旋轉角度
+                ball.style.setProperty('--mix-x', `${(Math.random() - 0.5) * 120}px`);
+                ball.style.setProperty('--mix-y', `${-(Math.random() * 180 + 30)}px`);
+                ball.style.setProperty('--mix-r', `${Math.random() * 1080}deg`);
+                ball.style.animationDuration = `${0.15 + Math.random() * 0.2}s`; // 速度隨機
+                ball.classList.add('mixing');
+            });
+
+            // 3. 準備掉落的扭蛋顏色
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            droppingCapsule.className = `capsule mini-ball ${randomColor}`;
+            
+            // 4. 觸發掉落動畫 + 音效
+            setTimeout(() => {
+                droppingCapsule.classList.add('drop');
+                playDropSound(); // 掉落音效
+            }, 500);
+
+            // 5. 動畫結束後，抽出結果並顯示 Modal
+            setTimeout(() => {
+                // 清除動畫 class
+                knobEl.classList.remove('spinning');
+                machineEl.classList.remove('shake');
+                droppingCapsule.classList.remove('drop');
+                droppingCapsule.style.opacity = '0'; // 隱藏掉落球
+                miniBalls.forEach(ball => ball.classList.remove('mixing')); // 停止攪拌
+
+                // 執行邏輯抽取
+                drawTeacher();
+                playTadaSound(); // 揭曉幸運兒的歡呼音效
+            }, 2000); // 對應 dropCapsule 動畫的總長度 + 緩衝
+        }
+
+        function drawTeacher() {
+            // 隨機選取一位老師
+            const randomIndex = Math.floor(Math.random() * availableTeachers.length);
+            const selectedTeacher = availableTeachers[randomIndex];
+            
+            // 從清單移除
+            availableTeachers.splice(randomIndex, 1);
+            
+            // 加入歷史紀錄
+            history.unshift(selectedTeacher); // 加到最前面
+
+            // 更新 UI
+            updateUI();
+
+            // 顯示結果 Modal
+            resultSchool.textContent = selectedTeacher.school;
+            resultName.textContent = selectedTeacher.name;
+            resultModal.classList.remove('hidden');
+            resultModal.classList.add('flex');
+        }
+
+        function closeModal() {
+            resultModal.classList.add('hidden');
+            resultModal.classList.remove('flex');
+            isAnimating = false; // 解除鎖定
+        }
+
+        function updateUI() {
+            // 更新剩餘人數
+            remainCountEl.textContent = availableTeachers.length;
+
+            // 更新歷史紀錄區塊
+            if (history.length > 0) {
+                emptyHistoryMsg.style.display = 'none';
+            }
+            
+            historyList.innerHTML = '';
+            history.forEach((item, index) => {
+                const tag = document.createElement('div');
+                // 最新抽出的高亮顯示
+                const bgClass = index === 0 ? 'bg-yellow-100 border-yellow-300 shadow-sm' : 'bg-gray-50 border-gray-200';
+                tag.className = `flex flex-col px-4 py-2 rounded-lg border ${bgClass} animate-[popIn_0.3s_ease-out] cursor-pointer relative group overflow-hidden hover:scale-105 transition-transform`;
+                
+                // 綁定點擊放回的事件
+                tag.onclick = () => returnTeacher(index);
+                
+                tag.innerHTML = `
+                    <div class="absolute inset-0 bg-red-500/90 text-white flex justify-center items-center opacity-0 group-hover:opacity-100 transition-opacity font-bold text-sm tracking-widest z-10">
+                        ↺ 放回
+                    </div>
+                    <span class="text-xs text-gray-500">${item.school}</span>
+                    <span class="font-bold text-gray-800">${item.name}</span>
+                `;
+                historyList.appendChild(tag);
+            });
+        }
+
+        // 將已抽出的老師放回扭蛋機中
+        function returnTeacher(index) {
+            if (isAnimating) return; // 抽籤中不允許操作
+            
+            // 1. 從歷史記錄中取出該位老師
+            const teacher = history.splice(index, 1)[0];
+            
+            // 2. 放回可用名單中
+            availableTeachers.push(teacher);
+            
+            // 3. 播放清脆的放回音效
+            if (isToneInitialized) {
+                let now = Tone.now();
+                fmSynth.triggerAttackRelease("G5", "32n", now);
+                fmSynth.triggerAttackRelease("E5", "32n", now + 0.1);
+            }
+            
+            // 4. 更新畫面
+            updateUI();
+            showCustomMessage(`已將 ${teacher.name} 老師放回扭蛋機！`);
+        }
+
+        function resetMachine() {
+            if(isAnimating) return;
+            availableTeachers = [...initialTeachers];
+            history = [];
+            updateUI();
+            initBalls();
+            emptyHistoryMsg.style.display = 'block';
+            historyList.appendChild(emptyHistoryMsg);
+            
+            // 簡單的反饋動畫
+            machineEl.classList.add('shake');
+            setTimeout(() => {
+                machineEl.classList.remove('shake');
+            }, 400);
+        }
+
+        // 自訂訊息框 (替代 alert)
+        function showCustomMessage(msg) {
+            const msgBox = document.createElement('div');
+            msgBox.className = 'fixed top-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-3 rounded-full shadow-2xl z-50 animate-[popIn_0.3s_ease-out] font-bold tracking-wide z-[9999]';
+            msgBox.textContent = msg;
+            document.body.appendChild(msgBox);
+            
+            setTimeout(() => {
+                msgBox.style.opacity = '0';
+                msgBox.style.transition = 'opacity 0.3s';
+                setTimeout(() => msgBox.remove(), 300);
+            }, 2000);
+        }
+
+        // 初始載入
+        window.onload = () => {
+            initBalls();
+            updateUI();
+        };
+
+    </script>
+</body>
+</html>
