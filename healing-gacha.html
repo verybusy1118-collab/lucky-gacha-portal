@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>互動式心靈解憂扭蛋機</title>
+    <!-- 引入 Tailwind CSS 確保響應式排版與高質感 UI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Font Awesome 圖標庫 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts 溫暖字體 -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #fef6e4 0%, #f3e5f5 100%);
+            min-height: 100vh;
+        }
+        .gashapon-font {
+            font-family: 'Fredoka One', 'Noto Sans TC', sans-serif;
+        }
+        /* 輕微呼吸效果 */
+        @keyframes gentle-breath {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        .breath-btn {
+            animation: gentle-breath 3s infinite ease-in-out;
+        }
+        /* 自訂滾動條 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 flex items-center justify-center">
+
+    <div class="max-w-6xl w-full bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl overflow-hidden border border-white/50">
+        <!-- 頂部精緻標題區 -->
+        <div class="bg-gradient-to-r from-pink-300 via-purple-300 to-teal-200 p-6 text-center border-b border-white/40">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-gray-800 tracking-wider gashapon-font flex items-center justify-center gap-3">
+                <i class="fa-solid fa-wand-magic-sparkles text-pink-500 animate-bounce"></i>
+                互動式心靈解憂扭蛋機
+            </h1>
+            <p class="text-sm md:text-base text-gray-700 mt-2 font-medium">
+                💖 郭小貞老師的綜合活動雙語心靈驛站 ── 轉動旋鈕，抽出一劑生活的溫柔解藥！
+            </p>
+        </div>
+
+        <!-- 主體排版：左控制台，右扭蛋機 -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 p-6">
+            
+            <!-- ================= 左側：控制台功能 (5/12) ================= -->
+            <div class="lg:col-span-5 bg-white/60 p-5 rounded-2xl border border-pink-100 flex flex-col justify-between space-y-6">
+                <div>
+                    <!-- 1. 分類勾選區 -->
+                    <div class="mb-5">
+                        <h2 class="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
+                            <i class="fa-solid fa-tags text-pink-400"></i> 1. 分類篩選（即時連動）
+                        </h2>
+                        <div class="flex flex-wrap gap-2">
+                            <label class="flex items-center gap-2 px-3 py-2 rounded-xl bg-pink-50 border border-pink-200 cursor-pointer hover:bg-pink-100 transition-colors">
+                                <input type="checkbox" id="cat-healing" checked class="w-4 h-4 text-pink-500 focus:ring-pink-400 border-gray-300 rounded">
+                                <span class="text-xs md:text-sm font-semibold text-pink-700">🌸 療癒金句</span>
+                                <span id="count-healing" class="bg-pink-200 text-pink-800 text-xs px-1.5 py-0.5 rounded-full font-bold">0</span>
+                            </label>
+                            <label class="flex items-center gap-2 px-3 py-2 rounded-xl bg-purple-50 border border-purple-200 cursor-pointer hover:bg-purple-100 transition-colors">
+                                <input type="checkbox" id="cat-partner" checked class="w-4 h-4 text-purple-500 focus:ring-purple-400 border-gray-300 rounded">
+                                <span class="text-xs md:text-sm font-semibold text-purple-700">🤝 夥伴互動</span>
+                                <span id="count-partner" class="bg-purple-200 text-purple-800 text-xs px-1.5 py-0.5 rounded-full font-bold">0</span>
+                            </label>
+                            <label class="flex items-center gap-2 px-3 py-2 rounded-xl bg-teal-50 border border-teal-200 cursor-pointer hover:bg-teal-100 transition-colors">
+                                <input type="checkbox" id="cat-happiness" checked class="w-4 h-4 text-teal-500 focus:ring-teal-400 border-gray-300 rounded">
+                                <span class="text-xs md:text-sm font-semibold text-teal-700">☀️ 療癒確幸</span>
+                                <span id="count-happiness" class="bg-teal-200 text-teal-800 text-xs px-1.5 py-0.5 rounded-full font-bold">0</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 2. 快速新增自訂獎項 -->
+                    <div class="mb-5 bg-yellow-50/50 p-4 rounded-xl border border-yellow-100">
+                        <h2 class="text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
+                            <i class="fa-solid fa-plus-circle text-yellow-500"></i> 新增自訂心靈配方
+                        </h2>
+                        <div class="space-y-3">
+                            <div class="grid grid-cols-3 gap-2">
+                                <select id="new-item-category" class="col-span-1 text-xs md:text-sm bg-white border border-gray-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-pink-400">
+                                    <option value="healing">🌸 療癒金句</option>
+                                    <option value="partner">🤝 夥伴互動</option>
+                                    <option value="happiness">☀️ 療癒確幸</option>
+                                </select>
+                                <input id="new-item-text" type="text" placeholder="輸入中文心靈引導文字..." class="col-span-2 text-xs md:text-sm bg-white border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-pink-400">
+                            </div>
+                            <div class="flex gap-2">
+                                <input id="new-item-bilingual" type="text" placeholder="輸入雙語對照詞彙或金句 (例如: Do Not Disturb)" class="flex-1 text-xs md:text-sm bg-white border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-pink-400">
+                                <button id="btn-add-item" class="bg-pink-400 hover:bg-pink-500 text-white font-bold px-4 py-1.5 rounded-lg text-xs md:text-sm transition-colors flex items-center gap-1 shrink-0">
+                                    <i class="fa-solid fa-check"></i> 新增
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. 獎項清單列表 -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                                <i class="fa-solid fa-list-check text-purple-400"></i> 2. 當前解憂抽獎池
+                            </h2>
+                            <span class="text-xs bg-slate-200 text-slate-700 px-2.5 py-1 rounded-full font-semibold">
+                                共 <span id="total-pool-count">0</span> 項配方
+                            </span>
+                        </div>
+                        
+                        <!-- 滾動清單 -->
+                        <div id="pool-list-container" class="max-h-[280px] overflow-y-auto border border-gray-100 rounded-xl bg-white/80 p-2 space-y-2">
+                            <!-- 獎項卡片將由 JS 動態生成 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 引導語 -->
+                <div class="pt-4 border-t border-dashed border-slate-200 text-xs text-slate-500 leading-relaxed">
+                    💡 <strong>郭老師教學小提點：</strong>您可以隨時取消勾選分類或點選垃圾桶 <i class="fa-regular fa-trash-can"></i> 排除部分選項。當轉動扭蛋機時，將僅從目前下方<strong>顯示的清單項目</strong>中隨機抽取！
+                </div>
+            </div>
+
+            <!-- ================= 右側：扭蛋機本體與動畫 (7/12) ================= -->
+            <div class="lg:col-span-7 flex flex-col items-center justify-start">
+                
+                <!-- 扭蛋機外殼 -->
+                <div class="w-full max-w-[420px] bg-gradient-to-b from-red-400 via-pink-400 to-pink-500 rounded-t-[100px] rounded-b-[40px] p-5 shadow-2xl border-4 border-red-500 relative flex flex-col items-center">
+                    
+                    <!-- 招牌與星星裝飾 -->
+                    <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-yellow-300 border-2 border-yellow-500 px-6 py-1.5 rounded-full shadow-md z-10">
+                        <span class="text-red-700 font-extrabold tracking-widest text-sm md:text-base gashapon-font flex items-center gap-1.5">
+                            ★ GASHAPON ★
+                        </span>
+                    </div>
+
+                    <!-- 1. 扭蛋機透明視窗 (Canvas 物理模擬) -->
+                    <div class="w-full h-[260px] bg-slate-900 rounded-t-[80px] rounded-b-3xl border-4 border-red-500 overflow-hidden relative shadow-inner mt-4 bg-gradient-to-b from-slate-900 via-slate-800 to-indigo-950">
+                        <!-- 反光線條 (裝飾) -->
+                        <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-white/20 pointer-events-none z-10"></div>
+                        <!-- Canvas 物理小球 -->
+                        <canvas id="canvas-gashapon" class="w-full h-full block"></canvas>
+                    </div>
+
+                    <!-- 2. 中間控制面板 (投幣孔與旋鈕) -->
+                    <div class="w-full bg-pink-100 rounded-2xl p-4 mt-4 border-2 border-pink-300 shadow-md grid grid-cols-12 gap-3 items-center relative">
+                        
+                        <!-- 左側：投幣孔 -->
+                        <div class="col-span-4 flex flex-col items-center justify-center border-r border-pink-200">
+                            <span class="text-[10px] text-pink-600 font-bold mb-1 tracking-wider"><i class="fa-solid fa-coins text-yellow-500"></i> INSERT COIN</span>
+                            <!-- 投幣口按鈕 -->
+                            <button id="btn-insert-coin" class="w-12 h-12 bg-zinc-800 hover:bg-zinc-700 rounded-full border-4 border-zinc-400 flex items-center justify-center relative shadow-inner cursor-pointer group transition-all">
+                                <div class="w-2 h-7 bg-black rounded-sm group-active:scale-95 transition-transform"></div>
+                                <!-- 金幣漂浮提示 -->
+                                <div class="absolute -top-1 -right-1 bg-yellow-400 text-[8px] text-yellow-900 font-bold px-1 rounded-full animate-bounce">
+                                    PUSH
+                                </div>
+                            </button>
+                            <span class="text-[9px] text-slate-500 mt-1 font-semibold" id="coin-status">免投幣直接轉</span>
+                        </div>
+
+                        <!-- 右側：旋鈕旋轉區 -->
+                        <div class="col-span-8 flex flex-col items-center justify-center relative">
+                            <span class="text-xs text-pink-700 font-bold mb-1 flex items-center gap-1">
+                                <i class="fa-solid fa-arrows-spin animate-spin text-pink-500"></i> 旋轉開運手勢
+                            </span>
+                            
+                            <!-- 實體大旋鈕 -->
+                            <div class="relative">
+                                <!-- 旋轉方向指示 -->
+                                <div class="absolute -inset-2 rounded-full border-2 border-dashed border-yellow-400 animate-[spin_10s_linear_infinite] pointer-events-none"></div>
+                                
+                                <button id="gashapon-knob" class="w-20 h-20 bg-gradient-to-br from-yellow-300 via-yellow-400 to-amber-500 hover:from-yellow-200 hover:to-amber-400 rounded-full border-4 border-yellow-100 shadow-lg flex items-center justify-center focus:outline-none transition-transform duration-300 active:scale-95 cursor-grab active:cursor-grabbing">
+                                    <!-- 旋鈕指針/把手形狀 -->
+                                    <div class="w-14 h-4 bg-amber-700 rounded-full relative flex items-center justify-between px-1 shadow-inner">
+                                        <div class="w-3 h-3 bg-white rounded-full"></div>
+                                        <div class="w-3 h-3 bg-white rounded-full"></div>
+                                    </div>
+                                    <!-- 中心裝飾 -->
+                                    <div class="absolute w-6 h-6 bg-yellow-100 rounded-full border-2 border-yellow-500 flex items-center justify-center">
+                                        <span class="text-amber-700 font-black text-xs">GO</span>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- 3. 出蛋口 (Gashapon Exit) -->
+                    <div class="w-full flex justify-center mt-4">
+                        <div class="w-32 h-20 bg-zinc-900 border-4 border-red-500 rounded-b-2xl rounded-t-lg relative shadow-inner overflow-hidden flex items-center justify-center">
+                            <!-- 擋片門板 -->
+                            <div id="exit-flap" class="absolute inset-x-1 top-1 bottom-4 bg-zinc-800 border-b-4 border-zinc-700 rounded-b-md flex flex-col items-center justify-center transition-transform duration-500 origin-top">
+                                <span class="text-[10px] text-zinc-500 font-bold uppercase">Exit</span>
+                                <div class="w-8 h-1 bg-zinc-900 rounded-full"></div>
+                            </div>
+                            
+                            <!-- 出口處滾出的扭蛋實體 -->
+                            <div id="prize-ball-exit" class="w-12 h-12 rounded-full shadow-lg absolute bottom-2 opacity-0 transform translate-y-12 transition-all duration-700 flex items-center justify-center text-xl cursor-pointer">
+                                🔮
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- 4. 幸運獲獎解說處 (心靈膠囊打開區) -->
+                <div class="w-full max-w-[420px] bg-amber-50 border-4 border-yellow-300 rounded-2xl p-5 mt-6 shadow-md relative min-h-[140px] flex flex-col items-center justify-center text-center">
+                    
+                    <div class="absolute -top-3.5 left-4 bg-yellow-300 text-yellow-950 font-bold text-xs px-3 py-1 rounded-full border border-yellow-400 shadow-sm">
+                        <i class="fa-solid fa-envelope-open-text"></i> 心靈抽取藥籤
+                    </div>
+
+                    <div id="prize-display" class="w-full transition-all duration-500 flex flex-col items-center justify-center">
+                        <!-- 預設靜態文字 -->
+                        <div id="prize-default-view" class="space-y-2">
+                            <div class="text-3xl text-pink-400 animate-bounce">🎁</div>
+                            <p class="text-gray-600 text-sm font-medium leading-relaxed">
+                                期待郭老師或同學們轉動黃色旋鈕，<br>抽出一劑生活的溫柔解藥！
+                            </p>
+                        </div>
+                        
+                        <!-- 抽獎中 Loading 動態 -->
+                        <div id="prize-loading-view" class="hidden space-y-3">
+                            <div class="relative w-12 h-12 flex items-center justify-center">
+                                <div class="absolute inset-0 rounded-full border-4 border-dashed border-pink-400 animate-spin"></div>
+                                <span class="text-2xl animate-pulse">🔮</span>
+                            </div>
+                            <p class="text-pink-600 text-sm font-semibold tracking-wider animate-pulse">
+                                解憂扭蛋正在碰撞組合中...
+                            </p>
+                        </div>
+
+                        <!-- 抽中顯現內容 (動態插入) -->
+                        <div id="prize-result-view" class="hidden w-full space-y-3">
+                            <!-- 分類 Badge -->
+                            <div id="result-badge-container">
+                                <!-- 動態插入類別 Badge -->
+                            </div>
+                            <!-- 中文內容 -->
+                            <h3 id="result-text-zh" class="text-lg md:text-xl font-bold text-slate-800 leading-snug px-2">
+                                <!-- 中文內容 -->
+                            </h3>
+                            <!-- 英文對照 / 雙語 -->
+                            <p id="result-text-en" class="text-sm font-semibold text-pink-600 italic tracking-wide px-4">
+                                <!-- 英文內容 -->
+                            </p>
+                            <!-- 療癒小動作引導 -->
+                            <div class="text-xs text-slate-500 pt-2 border-t border-dashed border-slate-200">
+                                💖 閉上眼睛，深呼吸三次，將這份溫柔記在心中。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 成功抽獎恭喜彈窗/特效 (Overlay) -->
+    <div id="congrats-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-3xl p-6 max-w-sm w-full mx-4 border-4 border-yellow-300 text-center shadow-2xl transform scale-95 transition-transform duration-300">
+            <div class="text-5xl mb-4">🎉</div>
+            <h4 class="text-xl font-bold text-gray-800">開啟解憂膠囊！</h4>
+            <div id="modal-ball" class="w-16 h-16 rounded-full mx-auto my-4 flex items-center justify-center text-2xl shadow-inner text-white font-bold">
+                🔮
+            </div>
+            <p id="modal-quote-zh" class="text-base font-bold text-slate-800 mb-2"></p>
+            <p id="modal-quote-en" class="text-sm font-semibold text-pink-500 italic mb-6"></p>
+            <button id="btn-modal-close" class="bg-gradient-to-r from-pink-400 to-purple-400 hover:from-pink-500 hover:to-purple-500 text-white font-bold px-6 py-2.5 rounded-full shadow-md text-sm transition-all transform active:scale-95">
+                收到！把好心情帶走 🌟
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. 預設資料庫初始化 (含雙語元素)
+        // ==========================================
+        const initialAwards = [
+            // 🌸 療癒金句 (healing)
+            { id: "h1", category: "healing", text: "接受自己的不完美，你本就獨一無二。", bilingual: "Embrace Imperfect, you are unique." },
+            { id: "h2", category: "healing", text: "給努力了一整天的自己一個溫暖的擁抱。", bilingual: "You did a great job today! Give yourself a warm hug." },
+            { id: "h3", category: "healing", text: "生活不是賽跑，而是一場緩慢的旅行。", bilingual: "Allow yourself to slow down. Life is a journey." },
+            { id: "h4", category: "healing", text: "在繁忙的世界中，找回最真實的內心。", bilingual: "Listen to your heart in this busy world." },
+            
+            // 🤝 夥伴互動 (partner)
+            { id: "p1", category: "partner", text: "向身邊的朋友或同事，說一句最真誠的讚美。", bilingual: "Pass on a warm compliment to your peer." },
+            { id: "p2", category: "partner", text: "跟同伴聊聊今天發生最棒、最開心的一件小事。", bilingual: "Share a cup of tea & share your joy." },
+            { id: "p3", category: "partner", text: "對鏡子或對迎面而來的人送上一個溫暖微笑。", bilingual: "Share a warm smile with someone today." },
+            { id: "p4", category: "partner", text: "傾聽一位夥伴的分享，給予他專注的支持。", bilingual: "Be an active listener to your friend." },
+
+            // ☀️ 療癒確幸 (happiness)
+            { id: "s1", category: "happiness", text: "今晚開啟『勿擾模式』，保留一小時完全放空。", bilingual: "Turn on 'Do Not Disturb' mode tonight." },
+            { id: "s2", category: "happiness", text: "犒賞自己一口最愛的微甜，甜進心坎裡。", bilingual: "Indulge in a sweet treat for yourself." },
+            { id: "s3", category: "happiness", text: "去附近的公園散步十分鐘，深呼吸大自然空氣。", bilingual: "Connect with nature, breathe in and out." },
+            { id: "s4", category: "happiness", text: "拿出一張紙，寫下今天微小但值得感恩的三件事。", bilingual: "Write down 3 things you are grateful for." }
+        ];
+
+        // 狀態管理
+        let awardsPool = [...initialAwards];
+        let activePool = []; // 過濾後的目前有效抽獎池
+        let isSpinning = false; // 是否正在進行扭蛋動畫
+        let totalCoins = 0; // 模擬投幣紀錄
+
+        // 分類對照表
+        const categoryMap = {
+            healing: { name: "🌸 療癒金句", colorClass: "bg-pink-100 text-pink-800 border-pink-200" },
+            partner: { name: "🤝 夥伴互動", colorClass: "bg-purple-100 text-purple-800 border-purple-200" },
+            happiness: { name: "☀️ 療癒確幸", colorClass: "bg-teal-100 text-teal-800 border-teal-200" }
+        };
+
+        // ==========================================
+        // 2. Web Audio API 音效生成器 (無損高質感)
+        // ==========================================
+        class SoundSynth {
+            constructor() {
+                this.ctx = null;
+            }
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+            // 1. 投幣清脆聲
+            playCoinSound() {
+                this.init();
+                const now = this.ctx.currentTime;
+                // 高頻振盪器模擬金屬碰撞
+                const osc1 = this.ctx.createOscillator();
+                const osc2 = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(880, now); // A5
+                osc1.frequency.exponentialRampToValueAtTime(1500, now + 0.1);
+
+                osc2.type = 'triangle';
+                osc2.frequency.setValueAtTime(1200, now);
+                osc2.frequency.exponentialRampToValueAtTime(2000, now + 0.08);
+
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+
+                osc1.connect(gain);
+                osc2.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc1.start(now);
+                osc2.start(now);
+                osc1.stop(now + 0.25);
+                osc2.stop(now + 0.25);
+            }
+
+            // 2. 扭蛋機內部碰撞/滾動聲 (循環/重複播放多聲部)
+            playRattleSound() {
+                this.init();
+                const now = this.ctx.currentTime;
+                const duration = 1.2;
+                
+                for(let i = 0; i < 6; i++) {
+                    const delay = i * 0.2;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(100 + Math.random() * 80, now + delay);
+                    osc.frequency.exponentialRampToValueAtTime(30, now + delay + 0.12);
+                    
+                    gain.gain.setValueAtTime(0.2, now + delay);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + delay + 0.12);
+                    
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    
+                    osc.start(now + delay);
+                    osc.stop(now + delay + 0.15);
+                }
+            }
+
+            // 3. 啵一聲（開膠囊）與扇形樂音
+            playPopSound() {
+                this.init();
+                const now = this.ctx.currentTime;
+
+                // 啵的一聲低頻
+                const oscPop = this.ctx.createOscillator();
+                const gainPop = this.ctx.createGain();
+                oscPop.type = 'sine';
+                oscPop.frequency.setValueAtTime(150, now);
+                oscPop.frequency.exponentialRampToValueAtTime(400, now + 0.1);
+                gainPop.gain.setValueAtTime(0.3, now);
+                gainPop.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+                oscPop.connect(gainPop);
+                gainPop.connect(this.ctx.destination);
+                oscPop.start(now);
+                oscPop.stop(now + 0.15);
+
+                // 和諧的療癒長音 (Arpeggio)
+                const freqs = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                freqs.forEach((f, index) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(f, now + 0.08 + index * 0.05);
+                    
+                    gain.gain.setValueAtTime(0.08, now + 0.08 + index * 0.05);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5 + index * 0.05);
+                    
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    
+                    osc.start(now + 0.08 + index * 0.05);
+                    osc.stop(now + 0.6);
+                });
+            }
+        }
+        const sound = new SoundSynth();
+
+        // ==========================================
+        // 3. DOM 節點宣告
+        // ==========================================
+        const checkboxHealing = document.getElementById("cat-healing");
+        const checkboxPartner = document.getElementById("cat-partner");
+        const checkboxHappiness = document.getElementById("cat-happiness");
+
+        const countHealingBadge = document.getElementById("count-healing");
+        const countPartnerBadge = document.getElementById("count-partner");
+        const countHappinessBadge = document.getElementById("count-happiness");
+
+        const totalPoolCountSpan = document.getElementById("total-pool-count");
+        const poolListContainer = document.getElementById("pool-list-container");
+
+        const selectNewCategory = document.getElementById("new-item-category");
+        const inputNewText = document.getElementById("new-item-text");
+        const inputNewBilingual = document.getElementById("new-item-bilingual");
+        const btnAddItem = document.getElementById("btn-add-item");
+
+        const btnInsertCoin = document.getElementById("btn-insert-coin");
+        const coinStatusText = document.getElementById("coin-status");
+        const gashaponKnob = document.getElementById("gashapon-knob");
+        const exitFlap = document.getElementById("exit-flap");
+        const prizeBallExit = document.getElementById("prize-ball-exit");
+
+        const prizeDefaultView = document.getElementById("prize-default-view");
+        const prizeLoadingView = document.getElementById("prize-loading-view");
+        const prizeResultView = document.getElementById("prize-result-view");
+        const resultBadgeContainer = document.getElementById("result-badge-container");
+        const resultTextZh = document.getElementById("result-text-zh");
+        const resultTextEn = document.getElementById("result-text-en");
+
+        const congratsModal = document.getElementById("congrats-modal");
+        const modalBall = document.getElementById("modal-ball");
+        const modalQuoteZh = document.getElementById("modal-quote-zh");
+        const modalQuoteEn = document.getElementById("modal-quote-en");
+        const btnModalClose = document.getElementById("btn-modal-close");
+
+        // ==========================================
+        // 4. HTML5 Canvas 物理引擎 (模擬扭蛋球)
+        // ==========================================
+        const canvas = document.getElementById("canvas-gashapon");
+        const ctx = canvas.getContext("2d");
+
+        // 自適應 Canvas 解析度
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // 扭蛋球物理參數
+        const balls = [];
+        const ballColors = [
+            { primary: "#f43f5e", secondary: "#fda4af", emoji: "🌸" }, // 櫻粉
+            { primary: "#a855f7", secondary: "#d8b4fe", emoji: "🤝" }, // 靚紫
+            { primary: "#0d9488", secondary: "#99f6e4", emoji: "☀️" }, // 翡綠
+            { primary: "#eab308", secondary: "#fef08a", emoji: "⭐" }, // 金黃
+            { primary: "#3b82f6", secondary: "#93c5fd", emoji: "🍀" }, // 海藍
+            { primary: "#f97316", secondary: "#ffedd5", emoji: "🍊" }  // 暖橙
+        ];
+
+        class Ball {
+            constructor(x, y) {
+                this.radius = 16 + Math.random() * 6; // 半徑 16 ~ 22
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 4;
+                this.vy = (Math.random() - 0.5) * 4;
+                this.gravity = 0.25;
+                this.bounce = 0.65; // 彈性係數
+                this.friction = 0.98; // 空氣摩擦
+                const colorSet = ballColors[Math.floor(Math.random() * ballColors.length)];
+                this.primary = colorSet.primary;
+                this.secondary = colorSet.secondary;
+                this.emoji = colorSet.emoji;
+                this.rotation = Math.random() * Math.PI * 2;
+                this.vRotation = (Math.random() - 0.5) * 0.1;
+            }
+
+            update(width, height) {
+                // 施加重力
+                this.vy += this.gravity;
+                
+                // 更新位置
+                this.x += this.vx;
+                this.y += this.vy;
+                this.rotation += this.vRotation;
+
+                // 物理摩擦
+                this.vx *= this.friction;
+                this.vy *= this.friction;
+
+                // 圓弧邊界（圓形視窗底部與兩側）
+                // 我們簡化為下半圓弧 (x-center)^2 + (y-center)^2 <= R^2 邊界，或直接使用高強度方框+底弧碰撞。
+                // 為了視覺穩定度，我們使用帶有圓角的漏斗狀邊界與視窗邊界限制
+                const pad = this.radius;
+                
+                // 左右邊界碰撞
+                if (this.x < pad) {
+                    this.x = pad;
+                    this.vx = -this.vx * this.bounce;
+                } else if (this.x > width - pad) {
+                    this.x = width - pad;
+                    this.vx = -this.vx * this.bounce;
+                }
+
+                // 底部碰撞
+                if (this.y > height - pad) {
+                    this.y = height - pad;
+                    this.vy = -this.vy * this.bounce;
+                    // 底部微弱摩擦阻尼
+                    this.vx *= 0.9;
+                } else if (this.y < pad) {
+                    // 頂部碰撞
+                    this.y = pad;
+                    this.vy = -this.vy * this.bounce;
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+
+                // 繪製扭蛋球半邊 (雙色扭蛋)
+                ctx.beginPath();
+                ctx.arc(0, 0, this.radius, Math.PI, 0);
+                ctx.fillStyle = this.primary;
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(0, 0, this.radius, 0, Math.PI);
+                ctx.fillStyle = this.secondary;
+                ctx.fill();
+
+                // 兩半結合縫線與高光
+                ctx.beginPath();
+                ctx.moveTo(-this.radius, 0);
+                ctx.lineTo(this.radius, 0);
+                ctx.strokeStyle = "rgba(0,0,0,0.25)";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // 內部裝飾小星或符號
+                ctx.fillStyle = "rgba(255,255,255,0.7)";
+                ctx.font = `${this.radius * 0.9}px sans-serif`;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(this.emoji, 0, 0);
+
+                // 外發光
+                ctx.beginPath();
+                ctx.arc(-this.radius*0.3, -this.radius*0.3, this.radius*0.2, 0, Math.PI * 2);
+                ctx.fillStyle = "rgba(255,255,255,0.4)";
+                ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        // 初始化球體群 (在 Canvas 中均勻分布)
+        function initBalls() {
+            balls.length = 0;
+            const numBalls = 35; // 扭蛋池總數
+            for (let i = 0; i < numBalls; i++) {
+                // 集中在中間偏上位置
+                const rx = 50 + Math.random() * (canvas.width - 100);
+                const ry = 40 + Math.random() * (canvas.height - 120);
+                balls.push(new Ball(rx, ry));
+            }
+        }
+
+        // 球球彼此碰撞 (簡單圓球碰撞響應)
+        function handleBallCollisions() {
+            for (let i = 0; i < balls.length; i++) {
+                for (let j = i + 1; j < balls.length; j++) {
+                    const b1 = balls[i];
+                    const b2 = balls[j];
+                    const dx = b2.x - b1.x;
+                    const dy = b2.y - b1.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const minDistance = b1.radius + b2.radius;
+
+                    if (distance < minDistance) {
+                        // 碰撞方向向量
+                        const nx = dx / distance;
+                        const ny = dy / distance;
+
+                        // 重疊深度排除
+                        const overlap = minDistance - distance;
+                        b1.x -= nx * overlap * 0.5;
+                        b1.y -= ny * overlap * 0.5;
+                        b2.x += nx * overlap * 0.5;
+                        b2.y += ny * overlap * 0.5;
+
+                        // 相對速度向量
+                        const kx = b1.vx - b2.vx;
+                        const ky = b1.vy - b2.vy;
+                        // 相對速度在法線方向上的分量
+                        const p = 2 * (nx * kx + ny * ky) / 2; // 假設質量相等為1
+
+                        // 更新速度
+                        b1.vx -= p * nx * 0.8;
+                        b1.vy -= p * ny * 0.8;
+                        b2.vx += p * nx * 0.8;
+                        b2.vy += p * ny * 0.8;
+                    }
+                }
+            }
+        }
+
+        // 扭動大抖動 (在旋轉時觸發高強度推力)
+        function shakeGashapon() {
+            sound.playRattleSound();
+            balls.forEach(ball => {
+                // 向上與往隨機方向噴發力道
+                ball.vx += (Math.random() - 0.5) * 16;
+                ball.vy -= (8 + Math.random() * 12);
+            });
+        }
+
+        // 動畫循環
+        function animationLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 物理運動與邊界處理
+            balls.forEach(ball => ball.update(canvas.width, canvas.height));
+            
+            // 相互碰撞
+            handleBallCollisions();
+            
+            // 繪製
+            balls.forEach(ball => ball.draw());
+
+            requestAnimationFrame(animationLoop);
+        }
+
+        // 啟動 Canvas 物理引擎
+        initBalls();
+        requestAnimationFrame(animationLoop);
+
+
+        // ==========================================
+        // 5. 控制台邏輯與數據渲染
+        // ==========================================
+        
+        // 過濾、計算分類數量並同步 UI 清單
+        function updateUI() {
+            // A. 計算全體與當前分類總數
+            const counts = { healing: 0, partner: 0, happiness: 0 };
+            awardsPool.forEach(item => {
+                if (counts[item.category] !== undefined) {
+                    counts[item.category]++;
+                }
+            });
+
+            countHealingBadge.innerText = counts.healing;
+            countPartnerBadge.innerText = counts.partner;
+            countHappinessBadge.innerText = counts.happiness;
+
+            // B. 篩選目前打勾的分類
+            const activeCategories = [];
+            if (checkboxHealing.checked) activeCategories.push("healing");
+            if (checkboxPartner.checked) activeCategories.push("partner");
+            if (checkboxHappiness.checked) activeCategories.push("happiness");
+
+            activePool = awardsPool.filter(item => activeCategories.includes(item.category));
+            totalPoolCountSpan.innerText = activePool.length;
+
+            // C. 重新繪製控制台獎項卡片
+            poolListContainer.innerHTML = "";
+            if (activePool.length === 0) {
+                poolListContainer.innerHTML = `
+                    <div class="text-center py-8 text-gray-400 text-sm">
+                        <i class="fa-solid fa-folder-open text-2xl mb-1 block"></i>
+                        目前沒有篩選到任何配方<br>請點選上方分類或手動新增！
+                    </div>
+                `;
+                return;
+            }
+
+            activePool.forEach(item => {
+                const catInfo = categoryMap[item.category];
+                const card = document.createElement("div");
+                card.className = "flex items-center justify-between bg-slate-50 border border-slate-100 p-2.5 rounded-xl hover:bg-slate-100 transition-colors gap-2 group";
+                card.innerHTML = `
+                    <div class="flex flex-col flex-1 min-w-0">
+                        <div class="flex items-center gap-1.5 mb-0.5">
+                            <span class="text-[10px] px-2 py-0.5 rounded-full font-bold border shrink-0 ${catInfo.colorClass}">
+                                ${catInfo.name}
+                            </span>
+                        </div>
+                        <p class="text-sm font-semibold text-gray-700 truncate">${item.text}</p>
+                        ${item.bilingual ? `<p class="text-[11px] text-pink-500 font-medium italic truncate">${item.bilingual}</p>` : ''}
+                    </div>
+                    <button class="text-slate-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors cursor-pointer shrink-0 md:opacity-0 group-hover:opacity-100 focus:opacity-100" title="自本次抽獎中移除" onclick="deleteItem('${item.id}')">
+                        <i class="fa-regular fa-trash-can text-sm"></i>
+                    </button>
+                `;
+                poolListContainer.appendChild(card);
+            });
+        }
+
+        // 暴露刪除函數到全域
+        window.deleteItem = function(id) {
+            // 從池中徹底過濾掉該項目
+            awardsPool = awardsPool.filter(item => item.id !== id);
+            updateUI();
+        };
+
+        // D. 點擊「新增自訂」邏輯
+        btnAddItem.addEventListener("click", () => {
+            const cat = selectNewCategory.value;
+            const text = inputNewText.value.trim();
+            const bilingual = inputNewBilingual.value.trim();
+
+            if (!text) {
+                showToast("請輸入完整的中文配方內容喔！");
+                return;
+            }
+
+            const newItem = {
+                id: "custom_" + Date.now(),
+                category: cat,
+                text: text,
+                bilingual: bilingual || null
+            };
+
+            awardsPool.push(newItem);
+            
+            // 清空輸入
+            inputNewText.value = "";
+            inputNewBilingual.value = "";
+
+            // 提示音效
+            sound.init();
+            sound.playCoinSound();
+
+            updateUI();
+            showToast("成功添加一條自訂心靈配方！");
+        });
+
+        // 動態小提示
+        function showToast(message) {
+            const toast = document.createElement("div");
+            toast.className = "fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white text-xs md:text-sm font-bold px-4 py-2.5 rounded-full shadow-lg z-50 transition-all duration-300 opacity-0 translate-y-3";
+            toast.innerText = message;
+            document.body.appendChild(toast);
+            
+            // animate in
+            setTimeout(() => {
+                toast.classList.remove("opacity-0", "translate-y-3");
+                toast.classList.add("opacity-100", "translate-y-0");
+            }, 50);
+
+            // animate out
+            setTimeout(() => {
+                toast.classList.remove("opacity-100", "translate-y-0");
+                toast.classList.add("opacity-0", "translate-y-3");
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+
+        // 連動勾選按鈕事件
+        checkboxHealing.addEventListener("change", updateUI);
+        checkboxPartner.addEventListener("change", updateUI);
+        checkboxHappiness.addEventListener("change", updateUI);
+
+
+        // ==========================================
+        // 6. 投幣與扭蛋核心交互邏輯
+        // ==========================================
+        
+        // 投幣點擊
+        btnInsertCoin.addEventListener("click", () => {
+            sound.playCoinSound();
+            totalCoins++;
+            coinStatusText.innerHTML = `<span class="text-yellow-600 font-extrabold animate-pulse">已投入 ${totalCoins} 枚金幣</span>`;
+            showToast("多謝款待！金幣已投入 🪙");
+        });
+
+        // 轉動旋鈕
+        gashaponKnob.addEventListener("click", () => {
+            // 防抖
+            if (isSpinning) return;
+            
+            // 檢查獎項池是否為空
+            if (activePool.length === 0) {
+                showToast("現在抽獎池是空的喔！請先在左邊勾選分類或添加項目。");
+                return;
+            }
+
+            isSpinning = true;
+            sound.init();
+
+            // A. 旋鈕旋轉動畫 (CSS)
+            gashaponKnob.style.transform = "rotate(360deg)";
+            setTimeout(() => {
+                gashaponKnob.style.transform = "rotate(0deg)";
+            }, 1000);
+
+            // B. 觸發 Canvas 物理球大甩動
+            shakeGashapon();
+            // 在運動中隨機再推一次
+            setTimeout(() => {
+                shakeGashapon();
+            }, 600);
+
+            // C. UI 進入加載讀秒狀態
+            prizeDefaultView.classList.add("hidden");
+            prizeResultView.classList.add("hidden");
+            prizeLoadingView.classList.remove("hidden");
+
+            // D. 動畫約 1.5 秒結束，隨機抽選並揭曉
+            setTimeout(() => {
+                isSpinning = false;
+                
+                // 從目前過濾後的活動池隨機挑選一項
+                const randomIndex = Math.floor(Math.random() * activePool.length);
+                const prize = activePool[randomIndex];
+
+                // 出蛋動畫
+                triggerBallExit(prize);
+
+            }, 1600);
+        });
+
+        // 觸發扭蛋實體滾落
+        function triggerBallExit(prize) {
+            // A. 開啟出蛋口擋板
+            exitFlap.style.transform = "rotateX(-120deg)";
+            
+            // B. 隨機選一個扭蛋球色套用在出口球上
+            const randomColor = ballColors[Math.floor(Math.random() * ballColors.length)];
+            prizeBallExit.style.background = `linear-gradient(135deg, ${randomColor.primary} 50%, ${randomColor.secondary} 50%)`;
+            prizeBallExit.innerText = randomColor.emoji;
+
+            // C. 扭蛋實體滾下
+            prizeBallExit.classList.remove("opacity-0", "translate-y-12");
+            prizeBallExit.classList.add("opacity-100", "translate-y-0", "animate-bounce");
+
+            setTimeout(() => {
+                // 關閉擋板
+                exitFlap.style.transform = "rotateX(0deg)";
+            }, 800);
+
+            // D. 點擊出蛋口的扭蛋球可以打開膠囊
+            const openCapsuleHandler = () => {
+                sound.playPopSound();
+                
+                // 出口扭蛋隱藏
+                prizeBallExit.classList.add("opacity-0", "translate-y-12");
+                prizeBallExit.classList.remove("opacity-100", "translate-y-0", "animate-bounce");
+
+                // 解除點擊綁定
+                prizeBallExit.removeEventListener("click", openCapsuleHandler);
+
+                // E. 在幸運獲獎處顯示結果，並彈出恭喜視窗
+                revealPrize(prize, randomColor);
+            };
+
+            // 綁定一次性事件
+            prizeBallExit.addEventListener("click", openCapsuleHandler);
+
+            // 如果使用者 3 秒內沒主動點擊，自動幫忙解鎖開啟
+            setTimeout(() => {
+                if (prizeBallExit.classList.contains("opacity-100")) {
+                    openCapsuleHandler();
+                }
+            }, 3000);
+        }
+
+        // 真正呈現結果
+        function revealPrize(prize, colorSet) {
+            const catInfo = categoryMap[prize.category];
+
+            // 1. 填充結果欄位
+            resultBadgeContainer.innerHTML = `
+                <span class="inline-block text-xs px-3 py-1 rounded-full font-bold border shadow-sm ${catInfo.colorClass}">
+                    ${catInfo.name}
+                </span>
+            `;
+            resultTextZh.innerText = prize.text;
+            resultTextEn.innerText = prize.bilingual ? `❝ ${prize.bilingual} ❞` : "";
+
+            // 切換視圖
+            prizeLoadingView.classList.add("hidden");
+            prizeResultView.classList.remove("hidden");
+
+            // 2. 顯示恭喜彈窗
+            modalBall.style.background = `linear-gradient(135deg, ${colorSet.primary} 50%, ${colorSet.secondary} 50%)`;
+            modalBall.innerText = colorSet.emoji;
+            modalQuoteZh.innerText = prize.text;
+            modalQuoteEn.innerText = prize.bilingual ? `❝ ${prize.bilingual} ❞` : "";
+            
+            congratsModal.classList.remove("hidden");
+            setTimeout(() => {
+                congratsModal.classList.remove("opacity-0");
+                congratsModal.firstElementChild.classList.remove("scale-95");
+                congratsModal.firstElementChild.classList.add("scale-100");
+            }, 10);
+        }
+
+        btnModalClose.addEventListener("click", () => {
+            congratsModal.classList.add("opacity-0");
+            congratsModal.firstElementChild.classList.remove("scale-100");
+            congratsModal.firstElementChild.classList.add("scale-95");
+            setTimeout(() => {
+                congratsModal.classList.add("hidden");
+                // 恢復初始視圖
+                prizeResultView.classList.add("hidden");
+                prizeDefaultView.classList.remove("hidden");
+            }, 300);
+        });
+
+        // 初始化 UI
+        updateUI();
+
+    </script>
+</body>
+</html>
