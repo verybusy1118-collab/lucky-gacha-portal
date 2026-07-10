@@ -3,38 +3,38 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>?��??��?- 你�??��?座�?</title>
+  <title>情緒儀表 - 你的情緒座標</title>
   <link rel="stylesheet" href="emotion-style.css">
 </head>
 <body>
   <div class="nav-links">
-    <a href="emotion-dashboard.html">後台統�? Dashboard &rarr;</a>
+    <a href="emotion-dashboard.html">後台統計 Dashboard &rarr;</a>
   </div>
 
   <div class="container">
     <!-- Setup Screen (Form) -->
     <div id="setup-screen" class="setup-screen">
       <div class="glass-panel">
-        <h1 style="margin-bottom: 1rem; text-align: center;">?�索你�??��?座�?</h1>
-        <p style="text-align: center; margin-bottom: 2rem; color: #cbd5e1;">請輸?��??��?字�?一?�形容現?�自己�?話�?讓�??�為你�??��?屬�??��??�騰??/p>
+        <h1 style="margin-bottom: 1rem; text-align: center;">探索你的情緒座標</h1>
+        <p style="text-align: center; margin-bottom: 2rem; color: #cbd5e1;">請輸入你的名字與一句形容現在自己的話，讓我們為你打造專屬的情緒圖騰。</p>
         
         <form id="setup-form" class="setup-form">
           <div class="input-group">
-            <label for="user-name">你�??��?</label>
-            <input type="text" id="user-name" placeholder="例�?：�??? required maxlength="10">
+            <label for="user-name">你的名字</label>
+            <input type="text" id="user-name" placeholder="例如：小明" required maxlength="10">
           </div>
           
           <div class="input-group">
-            <label for="user-desc">形容?�己?��??�話</label>
-            <textarea id="user-desc" rows="3" placeholder="例�?：�?天�?滿幹?��?" required maxlength="50"></textarea>
+            <label for="user-desc">形容自己的一句話</label>
+            <textarea id="user-desc" rows="3" placeholder="例如：今天充滿幹勁！" required maxlength="50"></textarea>
           </div>
           
           <div class="input-group">
-            <label for="group-code">?��? (?�填)</label>
-            <input type="text" id="group-code" placeholder="例�?�?701" maxlength="20">
+            <label for="group-code">日期 (選填)</label>
+            <input type="text" id="group-code" placeholder="例如：0701" maxlength="20">
           </div>
           
-          <button type="submit" class="btn">?��?專屬?�騰</button>
+          <button type="submit" class="btn">生成專屬圖騰</button>
         </form>
       </div>
     </div>
@@ -42,21 +42,21 @@
     <!-- App Screen (Map Drag & Drop) -->
     <div id="app-screen" class="app-screen">
       <div class="header">
-        <h1>將�?騰移?�到你�??��?位置</h1>
-        <p>橫軸�?��?��??�度?��?縱軸�?��?�能?��?度�?/p>
+        <h1>將圖騰移動到你的情緒位置</h1>
+        <p>橫軸代表「愉悅度」，縱軸代表「能量程度」</p>
       </div>
 
       <div class="map-container" id="map-container">
-        <!-- 10x10 Grid injected via emotion-grid.js -->
+        <!-- 10x10 Grid injected via grid.js -->
         <div class="mood-grid"></div>
         
         <!-- Axes -->
         <div class="axis-x"></div>
         <div class="axis-y"></div>
-        <div class="axis-label label-top">高能??/div>
-        <div class="axis-label label-bottom">低能??/div>
-        <div class="axis-label label-left">低�???/div>
-        <div class="axis-label label-right">高�???/div>
+        <div class="axis-label label-top">高能量</div>
+        <div class="axis-label label-bottom">低能量</div>
+        <div class="axis-label label-left">低愉悅</div>
+        <div class="axis-label label-right">高愉悅</div>
 
         <!-- Draggable Avatar -->
         <div id="avatar" class="avatar-3d" style="display: none; left: 50%; top: 50%;">
@@ -65,8 +65,8 @@
       </div>
 
       <div class="controls">
-        <button id="btn-back" class="btn" style="background: rgba(255,255,255,0.1); color: white;">?�新設�?</button>
-        <button id="btn-submit" class="btn">確�??�出</button>
+        <button id="btn-back" class="btn" style="background: rgba(255,255,255,0.1); color: white;">重新設定</button>
+        <button id="btn-submit" class="btn">確認送出</button>
       </div>
     </div>
   </div>

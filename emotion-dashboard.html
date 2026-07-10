@@ -3,20 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>?��??��?- 後台統�?</title>
+  <title>情緒儀表 - 後台統計</title>
   <link rel="stylesheet" href="emotion-style.css">
 </head>
 <body>
   <div class="nav-links">
-    <a href="emotion-index.html">&larr; 返�??��?活�?</a>
+    <a href="emotion-index.html">&larr; 返回設定</a>
   </div>
 
   <div class="container" style="display: flex; flex-direction: column; align-items: center; padding-top: 4rem;">
     <div class="header" style="margin-bottom: 10px;">
-      <h1>?��?統�??�表板</h1>
-      <p>點�?座�?上�??��??�以?��?詳細?�容</p>
+      <h1>情緒統計儀表板</h1>
+      <p>點擊座標上的圓圈可以查看詳細內容</p>
       <div style="margin-top: 1rem; display: flex; gap: 10px; justify-content: center;">
-        <input type="text" id="group-code-input" placeholder="輸入?��??��? (例�?: 0701)" style="padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.5); color: white; width: 250px;">
+        <input type="text" id="group-code-input" placeholder="輸入日期查看 (例如: 0701)" style="padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.5); color: white; width: 250px;">
         <button id="btn-load-group" class="btn" style="padding: 10px 20px; font-size: 1rem; margin-top: 0;">載入</button>
       </div>
     </div>
@@ -28,16 +28,16 @@
       <!-- Axes -->
       <div class="axis-x"></div>
       <div class="axis-y"></div>
-      <div class="axis-label label-top">高能??/div>
-      <div class="axis-label label-bottom">低能??/div>
-      <div class="axis-label label-left">低�???/div>
-      <div class="axis-label label-right">高�???/div>
+      <div class="axis-label label-top">高能量</div>
+      <div class="axis-label label-bottom">低能量</div>
+      <div class="axis-label label-left">低愉悅</div>
+      <div class="axis-label label-right">高愉悅</div>
 
       <!-- Bubbles will be injected here via JS -->
     </div>
     
     <div style="margin-top: 2rem;">
-      <button id="btn-clear" class="btn" style="background: #ef4444;">清空?�?��???/button>
+      <button id="btn-clear" class="btn" style="background: #ef4444;">清空所有資料</button>
     </div>
   </div>
 
@@ -45,7 +45,7 @@
   <div id="details-modal" class="modal-overlay">
     <div class="modal-content glass-panel">
       <button class="close-btn" id="close-modal">&times;</button>
-      <h2 id="modal-title" style="margin-bottom: 1rem; color: var(--accent);">此�??��??��???/h2>
+      <h2 id="modal-title" style="margin-bottom: 1rem; color: var(--accent);">此區域的參與者</h2>
       <div id="modal-list">
         <!-- Participant cards injected here -->
       </div>
@@ -56,6 +56,6 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <script src="firebase-config.js"></script>
   <script src="grid.js"></script>
-  <script src="dashboard.js?v=3"></script>
+  <script src="emotion-dashboard.js"></script>
 </body>
 </html>

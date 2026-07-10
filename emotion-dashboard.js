@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function showModal(points, color) {
-    modalTitle.textContent = `此�??�共??${points.length} 人`;
+    modalTitle.textContent = `此區域共有 ${points.length} 人`;
     modalTitle.style.color = color;
     
     modalList.innerHTML = '';
@@ -145,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   btnClear.addEventListener('click', () => {
-    if (confirm('確�?要�?空當?�日?��??��?座�?資�??��?(將刪?�符?�當?�日?��??�?��???')) {
+    if (confirm('確定要清空當前日期的情緒座標資料嗎？(將刪除符合當前日期的所有紀錄)')) {
       let filtered = [];
       if (currentFilter && currentFilter !== '') {
         filtered = allData.filter(item => item.dateGroup === currentFilter);

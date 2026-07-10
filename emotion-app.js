@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     currentUser.dateGroup = groupInput || 'default';
 
     // Pick a cute animal emoji based on the name
-    const animals = ['?¶','?±','?­','?¹','?°','??','?»','?¼','?¨','?¯','??','?®','?·','?¸','?µ','?§','?¤','??','??','??','??','?¢','??','?¬','?³','??','?¦¦','?¦¥'];
+    const animals = ['ğŸ¶','ğŸ±','ğŸ­','ğŸ¹','ğŸ°','ğŸ¦Š','ğŸ»','ğŸ¼','ğŸ¨','ğŸ¯','ğŸ¦','ğŸ®','ğŸ·','ğŸ¸','ğŸµ','ğŸ§','ğŸ¤','ğŸ¦†','ğŸ¦‰','ğŸ¦„','ğŸ','ğŸ¢','ğŸ™','ğŸ¬','ğŸ³','ğŸ¦”','ğŸ¦¦','ğŸ¦¥'];
     let hash = 0;
     for (let i = 0; i < currentUser.name.length; i++) {
       hash = currentUser.name.charCodeAt(i) + ((hash << 5) - hash);
@@ -122,20 +122,20 @@ document.addEventListener('DOMContentLoaded', () => {
     currentUser.timestamp = new Date().getTime();
 
     btnSubmit.disabled = true;
-    btnSubmit.textContent = '?å‡ºä¸?..';
+    btnSubmit.textContent = 'é€å‡ºä¸­...';
     
     // Save to Firebase Realtime Database
     window.db.ref('emotions_portal').push(currentUser)
       .then(() => {
-        // == ?¼æ”¾?šé??‘è? ==
+        // == ç™¼æ”¾é€šé—œæ†‘è­‰ ==
         localStorage.setItem('cert_dynasty', 'true');
 
         // Show success and redirect or reset
-        alert(`å¤ªæ?äº†ï?ä½ ç??…ç?åº§æ?å·²é€å‡º?‚\nä½ åœ¨ ${
-          color === 'red' ? 'é«˜èƒ½??ä½æ??? : 
-          color === 'yellow' ? 'é«˜èƒ½??é«˜æ??? : 
-          color === 'blue' ? 'ä½èƒ½??ä½æ??? : 'ä½èƒ½??é«˜æ???
-        } ?€å¡Šã€‚`);
+        alert(`å¤ªæ£’äº†ï¼ä½ çš„æƒ…ç·’åº§æ¨™å·²é€å‡ºã€‚\nä½ åœ¨ ${
+          color === 'red' ? 'é«˜èƒ½é‡/ä½æ„‰æ‚…' : 
+          color === 'yellow' ? 'é«˜èƒ½é‡/é«˜æ„‰æ‚…' : 
+          color === 'blue' ? 'ä½èƒ½é‡/ä½æ„‰æ‚…' : 'ä½èƒ½é‡/é«˜æ„‰æ‚…'
+        } å€å¡Šã€‚`);
         
         // Reset form
         document.getElementById('user-name').value = '';
@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
       })
       .catch((error) => {
         console.error("Error writing document: ", error);
-        alert("?³é€å¤±?—ï?è«‹å?è©¦ä?æ¬¡ï?");
+        alert("å‚³é€å¤±æ•—ï¼Œè«‹å†è©¦ä¸€æ¬¡ï¼");
       });
   });
 });
