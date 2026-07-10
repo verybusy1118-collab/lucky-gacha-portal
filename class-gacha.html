@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>神奇扭蛋機｜班級專屬小確幸</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts for Cute and Warm feel -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Noto+Sans+TC:wght@300..900&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+            background-color: #FFFDF3;
+            background-image: radial-gradient(#FDE047 8%, transparent 8%);
+            background-size: 24px 24px;
+        }
+        
+        /* 玻璃擬真質感 */
+        .glass-dome {
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: inset 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            backdrop-filter: blur(5px);
+            border: 8px solid #FBCFE8;
+        }
+
+        /* 扭蛋旋轉與跳躍動畫 (在原定格位置附近進行生動的晃動，確保不破壞整體排列) */
+        @keyframes capsule-bounce {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            15% { transform: translate(-8px, -15px) rotate(15deg) scale(1.05); }
+            30% { transform: translate(8px, 10px) rotate(-15deg) scale(0.95); }
+            45% { transform: translate(-10px, -8px) rotate(10deg); }
+            60% { transform: translate(10px, 8px) rotate(-10deg); }
+            75% { transform: translate(-4px, -4px) rotate(5deg); }
+            90% { transform: translate(2px, 2px) rotate(-2deg); }
+        }
+
+        .capsule-shake {
+            animation: capsule-bounce 1.8s ease-in-out infinite;
+        }
+
+        /* 旋鈕旋轉動畫 */
+        @keyframes knob-turn {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .turn-knob {
+            animation: knob-turn 0.8s ease-in-out;
+        }
+
+        /* 獎勵球掉落動畫 */
+        @keyframes ball-drop {
+            0% { transform: translateY(-50px) scale(0.3); opacity: 0; }
+            40% { transform: translateY(40px) scale(1); opacity: 1; }
+            70% { transform: translateY(15px) scale(1.1); }
+            100% { transform: translateY(25px) scale(1.1); }
+        }
+
+        .drop-capsule {
+            animation: ball-drop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* 遮罩彈出動畫 */
+        @keyframes modal-pop {
+            0% { transform: scale(0.7); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .animate-pop {
+            animation: modal-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* 自訂細緻滾動條 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #FEF3C7;
+            border-radius: 999px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #FBBF24;
+            border-radius: 999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #F59E0B;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-4 overflow-x-hidden select-none">
+
+    <!-- 頂部標題區 -->
+    <header class="text-center my-2 animate-fade-in">
+        <h1 class="text-4xl md:text-5xl font-black text-rose-500 tracking-wider flex justify-center items-center gap-3 drop-shadow-[0_2px_2px_rgba(0,0,0,0.1)]">
+            <span>✨</span> 神奇扭蛋機 <span>✨</span>
+        </h1>
+        <p class="text-md md:text-lg text-amber-700 mt-1 font-bold">
+            班級專屬小確幸 🌟 點擊旋鈕開啟大驚喜！
+        </p>
+    </header>
+
+    <!-- 主區塊：16:9 黃金比例視窗 (永遠強制左右分欄，不垂直堆疊) -->
+    <main class="max-w-7xl w-full mx-auto grid grid-cols-12 gap-6 items-stretch bg-white bg-opacity-90 rounded-3xl p-6 shadow-2xl border-4 border-amber-200">
+        
+        <!-- 左側：扭蛋機控制台 (強迫佔 5 格) -->
+        <section class="col-span-12 md:col-span-5 bg-amber-50 rounded-2xl p-5 border-2 border-amber-100 flex flex-col justify-between">
+            <div>
+                <h2 class="text-xl font-black text-amber-800 mb-4 flex items-center gap-2 pb-2 border-b-2 border-amber-200">
+                    <span class="text-2xl">🔧</span> 扭蛋機控制台
+                </h2>
+                
+                <!-- 1. 選擇抽獎範圍 -->
+                <div class="mb-5">
+                    <span class="block text-sm font-bold text-amber-900 mb-2">🎯 1. 篩選抽獎範圍：</span>
+                    <div class="flex flex-wrap gap-2">
+                        <label class="flex items-center gap-2 px-3 py-2 bg-purple-100 hover:bg-purple-200 rounded-xl cursor-pointer transition text-purple-800 font-bold border border-purple-200 shadow-sm text-sm">
+                            <input type="checkbox" id="chk-privilege" checked class="w-4 h-4 accent-purple-600 rounded">
+                            課堂特權
+                        </label>
+                        <label class="flex items-center gap-2 px-3 py-2 bg-blue-100 hover:bg-blue-200 rounded-xl cursor-pointer transition text-blue-800 font-bold border border-blue-200 shadow-sm text-sm">
+                            <input type="checkbox" id="chk-humor" checked class="w-4 h-4 accent-blue-600 rounded">
+                            幽默互動
+                        </label>
+                        <label class="flex items-center gap-2 px-3 py-2 bg-rose-100 hover:bg-rose-200 rounded-xl cursor-pointer transition text-rose-800 font-bold border border-rose-200 shadow-sm text-sm">
+                            <input type="checkbox" id="chk-reward" checked class="w-4 h-4 accent-rose-600 rounded">
+                            小獎勵
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 2. 管理與編輯獎項 -->
+                <div class="mb-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-bold text-amber-900">📝 2. 目前獎項清單 (<span id="reward-count" class="text-rose-500 font-black">0</span>)</span>
+                    </div>
+                    
+                    <!-- 獎項卡片滾動區 -->
+                    <div id="reward-list-container" class="max-h-[200px] overflow-y-auto space-y-2 pr-1 border border-amber-200 rounded-xl p-2 bg-white bg-opacity-70">
+                        <!-- 動態生成獎項卡片 -->
+                    </div>
+                </div>
+
+                <!-- 3. 新增獎項區 -->
+                <div class="bg-amber-100 bg-opacity-60 rounded-xl p-3 border border-amber-200 mb-4">
+                    <span class="block text-xs font-bold text-amber-800 mb-2"><i class="fa-solid fa-plus-circle"></i> 新增自訂獎項</span>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <select id="new-reward-category" class="bg-white border border-amber-300 rounded-lg px-2 py-1 text-xs font-bold text-amber-800 outline-none focus:ring-2 focus:ring-amber-500">
+                            <option value="課堂特權">課堂特權</option>
+                            <option value="幽默互動">幽默互動</option>
+                            <option value="小獎勵">小獎勵</option>
+                        </select>
+                        <input type="text" id="new-reward-text" placeholder="輸入驚喜內容..." class="flex-1 bg-white border border-amber-300 rounded-lg px-3 py-1 text-xs font-bold text-amber-800 outline-none focus:ring-2 focus:ring-amber-500 placeholder-amber-300">
+                        <button id="btn-add-reward" class="bg-amber-500 hover:bg-amber-600 text-white font-black text-xs px-4 py-2 rounded-lg shadow-md transition active:scale-95 flex items-center gap-1 justify-center">
+                            <i class="fa-solid fa-plus"></i> 新增
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 控制台底部：重設與音效 -->
+            <div class="flex justify-between items-center pt-3 border-t-2 border-amber-200 gap-2">
+                <button id="btn-toggle-sound" class="flex-1 py-2 bg-rose-400 hover:bg-rose-500 text-white font-black rounded-xl shadow-md transition active:scale-95 text-xs sm:text-sm flex items-center justify-center gap-2">
+                    <i id="sound-icon" class="fa-solid fa-volume-high"></i>
+                    音效：<span id="sound-status-text">開啟</span>
+                </button>
+                <button id="btn-reset" class="flex-1 py-2 bg-slate-400 hover:bg-slate-500 text-white font-black rounded-xl shadow-md transition active:scale-95 text-xs sm:text-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    恢復預設 (30)
+                </button>
+            </div>
+        </section>
+
+        <!-- 右側：大扭蛋機視覺互動 (強迫佔 7 格) -->
+        <section class="col-span-12 md:col-span-7 flex flex-col items-center justify-center relative min-h-[450px]">
+            <!-- 扭蛋機本體 -->
+            <div class="relative w-full max-w-[340px] md:max-w-[380px] flex flex-col items-center">
+                
+                <!-- 1. 透明圓球艙 (Dome) -->
+                <div class="relative w-72 h-72 md:w-80 md:h-80 rounded-full glass-dome flex items-center justify-center overflow-hidden z-10 shadow-lg">
+                    <!-- 反光線條 -->
+                    <div class="absolute top-4 left-10 w-20 h-10 bg-white bg-opacity-40 rounded-full rotate-[-30deg] blur-[2px]"></div>
+                    <div class="absolute top-10 left-6 w-8 h-8 bg-white bg-opacity-30 rounded-full blur-[1px]"></div>
+                    
+                    <!-- 扭蛋球放置容器 (套用 86% 內縮圓圈，完美對齊圓玻璃艙邊框不穿幫) -->
+                    <div id="capsules-container" class="absolute w-[86%] h-[86%] rounded-full overflow-hidden">
+                        <!-- 由 JS 依據 Gemini-直接與-Google-AI-互動-06-29-2026_02_41_PM.png 精準格柵排列 28 顆高亮馬卡龍扭蛋 -->
+                    </div>
+                </div>
+
+                <!-- 2. 機身底部 (紅色與裝飾) -->
+                <div class="w-64 md:w-72 bg-rose-500 rounded-b-3xl py-6 px-4 flex flex-col items-center shadow-xl border-t-8 border-rose-600 relative z-20">
+                    <!-- 裝飾邊框與面板 -->
+                    <div class="w-full bg-amber-100 rounded-2xl p-4 border-4 border-amber-300 flex flex-col items-center shadow-inner">
+                        
+                        <!-- 旋鈕主體 -->
+                        <div class="relative flex flex-col items-center my-2">
+                            <span class="text-[10px] font-black text-rose-800 mb-1 tracking-widest"><i class="fa-solid fa-rotate"></i> 旋轉抽獎</span>
+                            <div id="gashapon-knob" class="w-20 h-20 bg-amber-400 hover:bg-amber-300 border-4 border-amber-500 rounded-full shadow-lg flex items-center justify-center cursor-pointer transition transform active:scale-90 relative">
+                                <!-- 內置旋扭轉盤線條 -->
+                                <div class="absolute w-2 h-14 bg-amber-600 rounded-full"></div>
+                                <div class="absolute w-14 h-2 bg-amber-600 rounded-full"></div>
+                                <div class="w-8 h-8 bg-amber-200 border-2 border-amber-500 rounded-full z-10 flex items-center justify-center">
+                                    <i class="fa-solid fa-star text-amber-500 text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 底部出球口 -->
+                        <div class="w-full mt-3 flex justify-between items-end">
+                            <div class="w-16 h-12 bg-zinc-800 border-2 border-zinc-700 rounded-t-xl relative overflow-hidden flex items-center justify-center shadow-inner">
+                                <div class="absolute bottom-0 w-full h-4 bg-zinc-900"></div>
+                                <!-- 掉落出來的扭蛋動畫起點 -->
+                                <div id="dispensing-capsule" class="absolute w-8 h-8 rounded-full hidden"></div>
+                            </div>
+                            <!-- 裝飾指示 -->
+                            <div class="text-[10px] text-amber-800 font-bold text-right leading-tight">
+                                <div>幸運出口 🎁</div>
+                                <div class="text-[8px] opacity-75">GOOD LUCK!</div>
+                            </div>
+                        </div>
+
+                    </div>
+                    
+                    <!-- 左右黃色裝飾耳朵 -->
+                    <div class="absolute -left-4 top-4 w-5 h-12 bg-amber-400 rounded-l-xl border-l-4 border-y-4 border-amber-500"></div>
+                    <div class="absolute -right-4 top-4 w-5 h-12 bg-amber-400 rounded-r-xl border-r-4 border-y-4 border-amber-500"></div>
+                </div>
+
+                <!-- 獲獎處平台 (包含高相容一鍵複製按鈕) -->
+                <div class="mt-4 w-72 md:w-80 bg-amber-200 bg-opacity-80 rounded-2xl p-3 border-2 border-dashed border-amber-400 flex flex-col items-center justify-center">
+                    <span class="text-xs font-black text-amber-800 mb-1"><i class="fa-solid fa-gift"></i> 幸運獲獎處</span>
+                    <div id="prize-tray" class="text-sm font-bold text-amber-700 text-center w-full">
+                        點擊黃色旋鈕，看看會抽到什麼小確幸！
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 頁尾宣告 -->
+    <footer class="text-center text-xs text-amber-600 font-bold my-3">
+        © 2026 神奇扭蛋機 ｜ 專門為 郭小貞 老師設計的班級小幫手
+    </footer>
+
+    <!-- 全螢幕得獎大彈窗 (內含一鍵複製功能) -->
+    <div id="win-modal" class="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-3xl p-6 md:p-8 max-w-lg w-full text-center border-8 border-rose-400 shadow-2xl relative animate-pop">
+            
+            <!-- 閃耀背景效果 -->
+            <div class="absolute inset-0 bg-radial-gradient from-amber-100 to-transparent opacity-20 pointer-events-none rounded-3xl"></div>
+
+            <!-- 超大頂部慶祝圖標 -->
+            <div class="flex justify-center -mt-20 mb-4">
+                <div class="w-28 h-28 bg-amber-300 rounded-full border-4 border-white shadow-lg flex items-center justify-center animate-bounce text-5xl">
+                    🎉
+                </div>
+            </div>
+
+            <!-- 動態扭蛋開啟動畫 -->
+            <div class="flex justify-center gap-2 mb-4 overflow-hidden h-20 items-center">
+                <div id="modal-capsule-left" class="w-14 h-14 bg-rose-400 border-4 border-rose-500 rounded-l-full transform transition-all duration-700"></div>
+                <div id="modal-capsule-right" class="w-14 h-14 bg-amber-100 border-4 border-amber-200 rounded-r-full transform transition-all duration-700"></div>
+            </div>
+
+            <p class="text-rose-500 font-black text-xl md:text-2xl tracking-widest mb-2 animate-pulse">
+                ✨ 恭喜獲得 ✨
+            </p>
+
+            <!-- 得獎類別標籤 -->
+            <div class="inline-block px-4 py-1.5 rounded-full text-sm font-black mb-4 shadow" id="modal-prize-tag">
+                分類標籤
+            </div>
+
+            <!-- 得獎內容與一鍵複製 -->
+            <div class="bg-amber-50 rounded-2xl p-4 md:p-6 border-2 border-amber-200 shadow-inner mb-6 relative group">
+                <p class="text-2xl md:text-3xl font-black text-amber-900 leading-snug mb-3" id="modal-prize-title">
+                    獎項內容文字
+                </p>
+                <div class="flex justify-center">
+                    <button id="btn-modal-copy" class="px-4 py-1.5 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-full text-xs shadow-md transition active:scale-95 flex items-center gap-1">
+                        <i class="fa-regular fa-copy"></i>
+                        <span>複製內容</span>
+                    </button>
+                </div>
+            </div>
+
+            <p class="text-xs text-amber-600 font-bold mb-6">
+                ✨ 太棒了！恭喜獲得這份令人期待的小確幸！ ✨
+            </p>
+
+            <!-- 關閉按鈕 -->
+            <button id="btn-close-win" class="w-full py-3 bg-amber-400 hover:bg-amber-500 active:scale-95 transition text-amber-950 font-black text-lg rounded-2xl shadow-md border-b-4 border-amber-600">
+                收下這份小確幸 ❤️
+            </button>
+        </div>
+    </div>
+
+    <!-- 自訂對話確認視窗 -->
+    <div id="custom-alert-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl p-6 max-w-sm w-full text-center border-4 border-amber-400 shadow-xl animate-pop">
+            <div class="text-4xl mb-3" id="alert-icon">⚠️</div>
+            <h3 class="text-lg font-black text-amber-900 mb-2" id="alert-title">提示訊息</h3>
+            <p class="text-sm font-bold text-amber-700 mb-6" id="alert-message">這裡是內容</p>
+            
+            <div class="flex gap-3 justify-center" id="alert-actions">
+                <button id="btn-alert-cancel" class="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 rounded-xl font-bold text-slate-700 text-sm transition">
+                    取消
+                </button>
+                <button id="btn-alert-confirm" class="px-5 py-2.5 bg-amber-400 hover:bg-amber-500 rounded-xl font-black text-amber-950 text-sm transition shadow-md">
+                    確認
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ----------------- 音效合成模組 (Web Audio API) -----------------
+        let audioCtx = null;
+        let soundEnabled = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        // 1. 旋轉旋鈕音效
+        function playTwistSound() {
+            if (!soundEnabled) return;
+            initAudio();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(320, audioCtx.currentTime + 0.25);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.25);
+        }
+
+        // 2. 扭蛋機震動滾動音效
+        function playShakeSound() {
+            if (!soundEnabled) return;
+            initAudio();
+            let duration = 1.6;
+            let startTime = audioCtx.currentTime;
+            
+            let interval = setInterval(() => {
+                if (audioCtx.currentTime - startTime > duration) {
+                    clearInterval(interval);
+                    return;
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(100 + Math.random() * 150, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.08);
+            }, 80);
+        }
+
+        // 3. 得獎開獎慶祝音效
+        function playWinSound() {
+            if (!soundEnabled) return;
+            initAudio();
+            const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50];
+            notes.forEach((freq, index) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime + index * 0.1);
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime + index * 0.1);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + index * 0.1 + 0.4);
+                osc.start(audioCtx.currentTime + index * 0.1);
+                osc.stop(audioCtx.currentTime + index * 0.1 + 0.4);
+            });
+        }
+
+        // ----------------- 預設 30 個獎項 -----------------
+        const DEFAULT_REWARDS = [
+            // 課堂特權
+            { id: "p1", name: "午餐時間第一位享用午餐", category: "課堂特權" },
+            { id: "p2", name: "今日減免圈詞作業一次", category: "課堂特權" },
+            { id: "p3", name: "免除值日生工作一天", category: "課堂特權" },
+            { id: "p4", name: "與同學自由更換座位一節課", category: "課堂特權" },
+            { id: "p5", name: "今日可擔任小老師", category: "課堂特權" },
+            { id: "p6", name: "優先選擇小組任務角色", category: "課堂特權" },
+            { id: "p7", name: "今日可使用老師指定小道具", category: "課堂特權" },
+            { id: "p8", name: "可選擇一首班級背景音樂", category: "課堂特權" },
+            { id: "p9", name: "可幫老師按一次計時器", category: "課堂特權" },
+            { id: "p10", name: "可優先分享自己的作品", category: "課堂特權" },
+            // 幽默互動
+            { id: "h1", name: "和同學擊掌三次", category: "幽默互動" },
+            { id: "h2", name: "模仿一種動物 5 秒", category: "幽默互動" },
+            { id: "h3", name: "用超級英雄語氣說一句鼓勵話", category: "幽默互動" },
+            { id: "h4", name: "找一位同學互相稱讚", category: "幽默互動" },
+            { id: "h5", name: "擺出勝利姿勢拍照", category: "幽默互動" },
+            { id: "h6", name: "對全班說一句今天的開心事", category: "幽默互動" },
+            { id: "h7", name: "和旁邊同學做一個搞笑表情", category: "幽默互動" },
+            { id: "h8", name: "用機器人聲音說「我完成任務了」", category: "幽默互動" },
+            { id: "h9", name: "抽一位同學一起比愛心", category: "幽默互動" },
+            { id: "h10", name: "說出一個讓大家微笑的句子", category: "幽默互動" },
+            // 小獎勵
+            { id: "r1", name: "獲得一張小貼紙", category: "小獎勵" },
+            { id: "r2", name: "獲得一枚班級點數", category: "小獎勵" },
+            { id: "r3", name: "可以選一張獎勵卡", category: "小獎勵" },
+            { id: "r4", name: "可以得到老師一句專屬鼓勵", category: "小獎勵" },
+            { id: "r5", name: "可以獲得一次加分", category: "小獎勵" },
+            { id: "r6", name: "可以選擇今日小任務", category: "小獎勵" },
+            { id: "r7", name: "獲得一張小確幸卡", category: "小獎勵" },
+            { id: "r8", name: "可以優先排隊一次", category: "小獎勵" },
+            { id: "r9", name: "可以得到一個神秘小驚喜", category: "小獎勵" },
+            { id: "r10", name: "可以抽下一位幸運同學", category: "小獎勵" }
+        ];
+
+        // ----------------- 應用程式狀態 -----------------
+        let rewards = [];
+        let isSpinning = false;
+        let lastSelectedPrizeText = ""; // 暫存最後得獎文字以供一鍵複製
+
+        // ----------------- 元素選取器 -----------------
+        const rewardListContainer = document.getElementById('reward-list-container');
+        const rewardCountEl = document.getElementById('reward-count');
+        const btnAddReward = document.getElementById('btn-add-reward');
+        const newRewardCategory = document.getElementById('new-reward-category');
+        const newRewardText = document.getElementById('new-reward-text');
+        
+        const chkPrivilege = document.getElementById('chk-privilege');
+        const chkHumor = document.getElementById('chk-humor');
+        const chkReward = document.getElementById('chk-reward');
+
+        const btnToggleSound = document.getElementById('btn-toggle-sound');
+        const soundIcon = document.getElementById('sound-icon');
+        const soundStatusText = document.getElementById('sound-status-text');
+        const btnReset = document.getElementById('btn-reset');
+
+        const gashaponKnob = document.getElementById('gashapon-knob');
+        const capsulesContainer = document.getElementById('capsules-container');
+        const dispensingCapsule = document.getElementById('dispensing-capsule');
+        const prizeTray = document.getElementById('prize-tray');
+
+        const winModal = document.getElementById('win-modal');
+        const modalPrizeTag = document.getElementById('modal-prize-tag');
+        const modalPrizeTitle = document.getElementById('modal-prize-title');
+        const modalCapsuleLeft = document.getElementById('modal-capsule-left');
+        const modalCapsuleRight = document.getElementById('modal-capsule-right');
+        const btnCloseWin = document.getElementById('btn-close-win');
+        const btnModalCopy = document.getElementById('btn-modal-copy');
+
+        // 自訂 Alert/Confirm
+        const customAlertModal = document.getElementById('custom-alert-modal');
+        const alertIcon = document.getElementById('alert-icon');
+        const alertTitle = document.getElementById('alert-title');
+        const alertMessage = document.getElementById('alert-message');
+        const btnAlertCancel = document.getElementById('btn-alert-cancel');
+        const btnAlertConfirm = document.getElementById('btn-alert-confirm');
+
+        // ----------------- 高相容性一鍵複製函式 (相容 iframe 與多端瀏覽器) -----------------
+        function executeCopy(text, buttonElement) {
+            if (!text) return;
+            const tempInput = document.createElement('textarea');
+            tempInput.value = text;
+            tempInput.style.position = 'fixed'; // 避免頁面滾動
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            
+            let success = false;
+            try {
+                success = document.execCommand('copy');
+            } catch (err) {
+                success = false;
+            }
+            document.body.removeChild(tempInput);
+
+            // 更新複製按鈕狀態
+            if (success) {
+                const originalHTML = buttonElement.innerHTML;
+                buttonElement.innerHTML = `<i class="fa-solid fa-check"></i> <span>已複製 ✔</span>`;
+                buttonElement.classList.remove('bg-rose-500', 'hover:bg-rose-600', 'bg-amber-500', 'hover:bg-amber-600');
+                buttonElement.classList.add('bg-emerald-500', 'text-white');
+                
+                setTimeout(() => {
+                    buttonElement.innerHTML = originalHTML;
+                    buttonElement.classList.remove('bg-emerald-500');
+                    if (buttonElement.id === 'btn-modal-copy') {
+                        buttonElement.classList.add('bg-rose-500', 'hover:bg-rose-600');
+                    } else {
+                        buttonElement.classList.add('bg-amber-500', 'hover:bg-amber-600');
+                    }
+                }, 1500);
+            }
+        }
+
+        // ----------------- 載入/保存 LocalStorage -----------------
+        function initApp() {
+            const localRewards = localStorage.getItem('gashapon_rewards');
+            if (localRewards) {
+                rewards = JSON.parse(localRewards);
+            } else {
+                rewards = JSON.parse(JSON.stringify(DEFAULT_REWARDS));
+                saveRewards();
+            }
+
+            const localSound = localStorage.getItem('gashapon_sound');
+            if (localSound !== null) {
+                soundEnabled = localSound === 'true';
+            }
+            updateSoundUI();
+
+            const localFilters = localStorage.getItem('gashapon_filters');
+            if (localFilters) {
+                const filters = JSON.parse(localFilters);
+                chkPrivilege.checked = filters.privilege;
+                chkHumor.checked = filters.humor;
+                chkReward.checked = filters.reward;
+            }
+
+            renderRewards();
+            renderCapsulesInDome();
+        }
+
+        function saveRewards() {
+            localStorage.setItem('gashapon_rewards', JSON.stringify(rewards));
+        }
+
+        function saveFilters() {
+            const filters = {
+                privilege: chkPrivilege.checked,
+                humor: chkHumor.checked,
+                reward: chkReward.checked
+            };
+            localStorage.setItem('gashapon_filters', JSON.stringify(filters));
+        }
+
+        // ----------------- 自訂對話框 -----------------
+        function showCustomAlert(title, text, isConfirm = false, onConfirm = null) {
+            alertTitle.textContent = title;
+            alertMessage.textContent = text;
+            alertIcon.textContent = isConfirm ? "❓" : "⚠️";
+
+            if (isConfirm) {
+                btnAlertCancel.classList.remove('hidden');
+                btnAlertCancel.textContent = "取消";
+            } else {
+                btnAlertCancel.classList.add('hidden');
+            }
+
+            customAlertModal.classList.remove('hidden');
+
+            btnAlertConfirm.onclick = () => {
+                customAlertModal.classList.add('hidden');
+                if (onConfirm) onConfirm();
+            };
+
+            btnAlertCancel.onclick = () => {
+                customAlertModal.classList.add('hidden');
+            };
+        }
+
+        // ----------------- UI 渲染與綁定 -----------------
+        function getCategoryStyle(category) {
+            switch(category) {
+                case '課堂特權':
+                    return { bg: 'bg-purple-100', text: 'text-purple-700', border: 'border-purple-200' };
+                case '幽默互動':
+                    return { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-200' };
+                case '小獎勵':
+                    return { bg: 'bg-rose-100', text: 'text-rose-700', border: 'border-rose-200' };
+                default:
+                    return { bg: 'bg-slate-100', text: 'text-slate-700', border: 'border-slate-200' };
+            }
+        }
+
+        function renderRewards() {
+            rewardListContainer.innerHTML = '';
+            rewardCountEl.textContent = rewards.length;
+
+            rewards.forEach(reward => {
+                const style = getCategoryStyle(reward.category);
+                
+                const card = document.createElement('div');
+                card.className = `flex justify-between items-center p-2.5 rounded-xl border ${style.bg} ${style.border} transition duration-200 hover:shadow-sm`;
+
+                card.innerHTML = `
+                    <div class="flex items-center gap-2 overflow-hidden flex-1">
+                        <span class="text-[10px] px-2 py-0.5 rounded-full font-black ${style.text} bg-white bg-opacity-70 border border-current flex-shrink-0">
+                            ${reward.category}
+                        </span>
+                        <span class="text-xs font-bold text-amber-950 truncate">${reward.name}</span>
+                    </div>
+                    <button class="text-slate-400 hover:text-rose-500 p-1.5 transition text-xs flex-shrink-0" onclick="deleteReward('${reward.id}')">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                `;
+                rewardListContainer.appendChild(card);
+            });
+
+            if (rewards.length === 0) {
+                rewardListContainer.innerHTML = `
+                    <div class="text-center py-8 text-amber-700 font-bold text-xs opacity-75">
+                        目前沒有任何獎項，請點擊下方重設或自行新增。
+                    </div>
+                `;
+            }
+        }
+
+        // ----------------- 日系可愛貼紙感格柵避碰擺放 -----------------
+        // 精準模擬 Gemini-直接與-Google-AI-互動-06-29-2026_02_41_PM.png
+        // 使用定點百分比座標系統，28個位置排列成圓形。
+        const capsuleColors = [
+            { main: '#FF9FB2', border: '#FF5E7E' },  // 夢幻粉紅
+            { main: '#C4B1FC', border: '#8E75E3' },  // 氣質紫
+            { main: '#84E4E4', border: '#29BCBC' }   // 活力藍綠
+        ];
+
+        const capsuleGridPositions = [
+            // Row 0 (最頂端，部分被遮罩切除，營造裝滿感)
+            { x: 10, y: 3 }, { x: 28, y: 2 }, { x: 46, y: 1 }, { x: 64, y: 2 }, { x: 82, y: 3 },
+            // Row 1
+            { x: 10, y: 19 }, { x: 28, y: 18 }, { x: 46, y: 18 }, { x: 64, y: 18 }, { x: 82, y: 19 },
+            // Row 2
+            { x: 10, y: 35 }, { x: 28, y: 34 }, { x: 46, y: 34 }, { x: 64, y: 34 }, { x: 82, y: 35 },
+            // Row 3
+            { x: 10, y: 51 }, { x: 28, y: 50 }, { x: 46, y: 50 }, { x: 64, y: 50 }, { x: 82, y: 51 },
+            // Row 4
+            { x: 10, y: 67 }, { x: 28, y: 66 }, { x: 46, y: 66 }, { x: 64, y: 66 }, { x: 82, y: 67 },
+            // Row 5 (底層收窄，貼合圓形底緣，絕不堆疊卡死)
+            { x: 28, y: 82 }, { x: 46, y: 82 }, { x: 64, y: 82 }
+        ];
+
+        function renderCapsulesInDome() {
+            capsulesContainer.innerHTML = '';
+            
+            capsuleGridPositions.forEach((pos, index) => {
+                // 輪流分配馬卡龍色彩
+                const color = capsuleColors[index % capsuleColors.length];
+                const ballEl = document.createElement('div');
+                const rotate = Math.floor(Math.random() * 30) - 15; // 微幅隨機旋轉，呈現生動感
+                
+                // 隨機選定中央點飾：星星(★) 或 經典雙條紋(||)
+                const useStar = index % 2 === 0;
+                let centerIconHTML = '';
+                if (useStar) {
+                    centerIconHTML = `<span class="text-white text-md font-black select-none opacity-90 drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)]">★</span>`;
+                } else {
+                    centerIconHTML = `
+                        <div class="flex gap-0.5 opacity-90 drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)]">
+                            <div class="w-1.5 h-3.5 bg-white rounded-full"></div>
+                            <div class="w-1.5 h-3.5 bg-white rounded-full"></div>
+                        </div>
+                    `;
+                }
+
+                // 套用高階日系泡泡糖 sticker 質感：
+                // 3px 貼紙暗描邊、頂部白色亮反光條 (Glossy Pillar)、下半部陰影、柔和內透光 shadow
+                ballEl.className = `capsule-item absolute rounded-full flex items-center justify-center shadow-lg transform transition-all duration-300`;
+                ballEl.style.width = '14.5%';
+                ballEl.style.height = '14.5%';
+                ballEl.style.left = `${pos.x}%`;
+                ballEl.style.top = `${pos.y}%`;
+                ballEl.style.backgroundColor = color.main;
+                ballEl.style.border = `3px solid ${color.border}`;
+                ballEl.style.boxShadow = '0 4px 6px rgba(0,0,0,0.15), inset 0 -4px 0 rgba(0,0,0,0.18)';
+                ballEl.style.transform = `rotate(${rotate}deg)`;
+                
+                // 記錄原始相對座標以便搖晃完完美歸位
+                ballEl.dataset.origX = pos.x;
+                ballEl.dataset.origY = pos.y;
+                ballEl.dataset.origRotate = rotate;
+
+                ballEl.innerHTML = `
+                    <!-- 頂端高反光飾條 (Glossy Highlight) -->
+                    <div class="absolute top-1 left-2 w-3.5 h-1.5 bg-white rounded-full opacity-60 transform -rotate-12"></div>
+                    <!-- 內部可愛經典符號 -->
+                    ${centerIconHTML}
+                `;
+                capsulesContainer.appendChild(ballEl);
+            });
+        }
+
+        // ----------------- 控制台按鈕事件 -----------------
+        btnAddReward.addEventListener('click', () => {
+            const text = newRewardText.value.trim();
+            const category = newRewardCategory.value;
+
+            if (!text) {
+                showCustomAlert("注意囉！", "請輸入獎項名稱，不能空白唷！");
+                return;
+            }
+
+            const newId = 'reward_' + Date.now();
+            rewards.unshift({ id: newId, name: text, category: category });
+            saveRewards();
+            renderRewards();
+            newRewardText.value = '';
+            
+            shakeCapsules(true);
+        });
+
+        window.deleteReward = function(id) {
+            rewards = rewards.filter(item => item.id !== id);
+            saveRewards();
+            renderRewards();
+        };
+
+        function updateSoundUI() {
+            if (soundEnabled) {
+                soundIcon.className = "fa-solid fa-volume-high";
+                soundStatusText.textContent = "開啟";
+                btnToggleSound.className = "flex-1 py-2 bg-emerald-400 hover:bg-emerald-500 text-white font-black rounded-xl shadow-md transition active:scale-95 text-xs sm:text-sm flex items-center justify-center gap-2";
+            } else {
+                soundIcon.className = "fa-solid fa-volume-xmark";
+                soundStatusText.textContent = "關閉";
+                btnToggleSound.className = "flex-1 py-2 bg-slate-400 hover:bg-slate-500 text-white font-black rounded-xl shadow-md transition active:scale-95 text-xs sm:text-sm flex items-center justify-center gap-2";
+            }
+        }
+
+        btnToggleSound.addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            localStorage.setItem('gashapon_sound', soundEnabled);
+            updateSoundUI();
+            if (soundEnabled) {
+                initAudio();
+                playTwistSound();
+            }
+        });
+
+        btnReset.addEventListener('click', () => {
+            showCustomAlert("重設確認", "郭小貞老師，確認要將所有獎項恢復成預設的 30 個嗎？這會清除您目前的新增紀錄喔！", true, () => {
+                rewards = JSON.parse(JSON.stringify(DEFAULT_REWARDS));
+                saveRewards();
+                renderRewards();
+                renderCapsulesInDome();
+                playWinSound();
+            });
+        });
+
+        [chkPrivilege, chkHumor, chkReward].forEach(chk => {
+            chk.addEventListener('change', saveFilters);
+        });
+
+        // ----------------- 抽獎動畫與物理還原 -----------------
+        function shakeCapsules(isMinor = false) {
+            const items = document.querySelectorAll('.capsule-item');
+            items.forEach(item => {
+                item.style.animation = isMinor 
+                    ? 'capsule-bounce 0.8s ease-in-out' 
+                    : 'capsule-bounce 1.8s ease-in-out';
+                
+                // 模擬劇烈旋轉跳動時的隨機飛散位移 (在各自定點周圍大幅度彈跳)
+                const randomX = (Math.random() - 0.5) * (isMinor ? 8 : 45);
+                const randomY = (Math.random() - 0.5) * (isMinor ? 8 : 45);
+                
+                item.style.transform = `translate(${randomX}px, ${randomY}px) rotate(${Math.random() * 360}deg)`;
+            });
+
+            // 確保彈跳完畢後，百分之百精準還原到無重疊的原始美學格柵座標
+            setTimeout(() => {
+                items.forEach(item => {
+                    item.style.animation = '';
+                    item.style.transform = `rotate(${item.dataset.origRotate}deg)`;
+                    item.style.left = `${item.dataset.origX}%`;
+                    item.style.top = `${item.dataset.origY}%`;
+                });
+            }, isMinor ? 800 : 1800);
+        }
+
+        function getCheckedCategories() {
+            const list = [];
+            if (chkPrivilege.checked) list.push("課堂特權");
+            if (chkHumor.checked) list.push("幽默互動");
+            if (chkReward.checked) list.push("小獎勵");
+            return list;
+        }
+
+        gashaponKnob.addEventListener('click', startLottery);
+
+        function startLottery() {
+            if (isSpinning) return;
+
+            const activeCategories = getCheckedCategories();
+            if (activeCategories.length === 0) {
+                showCustomAlert("提醒您", "請至少選擇一個抽獎範圍喔！");
+                return;
+            }
+
+            const activePool = rewards.filter(item => activeCategories.includes(item.category));
+            if (activePool.length === 0) {
+                showCustomAlert("注意囉！", "您勾選的分類中目前沒有任何獎項。請先到控制台新增或重設獎項！");
+                return;
+            }
+
+            isSpinning = true;
+            gashaponKnob.style.pointerEvents = "none";
+            
+            playTwistSound();
+            playShakeSound();
+
+            gashaponKnob.classList.add('turn-knob');
+            shakeCapsules(false);
+
+            prizeTray.innerHTML = `<span class="text-rose-500 animate-pulse"><i class="fa-solid fa-spinner animate-spin"></i> 扭蛋旋轉中，驚喜即將誕生...</span>`;
+
+            const luckyReward = activePool[Math.floor(Math.random() * activePool.length)];
+            lastSelectedPrizeText = luckyReward.name; // 記錄最後得獎內容
+
+            // 出球落道動畫
+            setTimeout(() => {
+                dispenseCapsuleAnimation(luckyReward.category);
+            }, 1000);
+
+            // 展開驚喜大彈窗
+            setTimeout(() => {
+                showWinModal(luckyReward);
+                gashaponKnob.classList.remove('turn-knob');
+                gashaponKnob.style.pointerEvents = "auto";
+                isSpinning = false;
+            }, 2000);
+        }
+
+        function dispenseCapsuleAnimation(category) {
+            dispensingCapsule.className = "absolute w-8 h-8 rounded-full z-30 drop-capsule flex flex-col overflow-hidden border border-black border-opacity-20";
+            
+            // 隨機選一組色票供掉落球使用
+            const color = capsuleColors[Math.floor(Math.random() * capsuleColors.length)];
+
+            dispensingCapsule.style.backgroundColor = color.main;
+            dispensingCapsule.style.border = `2px solid ${color.border}`;
+            dispensingCapsule.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+            dispensingCapsule.innerHTML = `
+                <div class="absolute top-0.5 left-1 w-2 h-1 bg-white rounded-full opacity-60 transform -rotate-12"></div>
+                <span class="text-white text-[8px] font-black select-none opacity-80 m-auto">★</span>
+            `;
+            dispensingCapsule.classList.remove('hidden');
+
+            setTimeout(() => {
+                dispensingCapsule.classList.add('hidden');
+                dispensingCapsule.classList.remove('drop-capsule');
+            }, 900);
+        }
+
+        function showWinModal(reward) {
+            playWinSound();
+
+            const style = getCategoryStyle(reward.category);
+            modalPrizeTag.className = `inline-block px-4 py-1.5 rounded-full text-sm font-black mb-4 shadow bg-white border border-2 ${style.text}`;
+            modalPrizeTag.textContent = reward.category;
+            modalPrizeTitle.textContent = reward.name;
+
+            modalCapsuleLeft.className = "w-14 h-14 border-4 rounded-l-full transform transition-all duration-700 ease-out";
+            modalCapsuleRight.className = "w-14 h-14 border-4 rounded-r-full transform transition-all duration-700 ease-out";
+            
+            // 對應色調
+            const color = capsuleColors[Math.floor(Math.random() * capsuleColors.length)];
+
+            modalCapsuleLeft.style.backgroundColor = color.main;
+            modalCapsuleLeft.style.borderColor = color.border;
+            modalCapsuleRight.style.backgroundColor = '#FFFFFF';
+            modalCapsuleRight.style.borderColor = color.border;
+
+            winModal.classList.remove('hidden');
+
+            setTimeout(() => {
+                modalCapsuleLeft.style.transform = "translateX(-25px) rotate(-35deg)";
+                modalCapsuleRight.style.transform = "translateX(25px) rotate(35deg)";
+            }, 100);
+
+            // 更新下方得獎托盤內容 (附帶高相容一鍵複製按鈕)
+            prizeTray.innerHTML = `
+                <div class="bg-white rounded-xl p-3 border border-amber-300 shadow-md animate-fade-in flex flex-col items-center gap-2">
+                    <div class="text-center">
+                        <span class="inline-block text-[10px] px-2.5 py-0.5 rounded-full font-black ${style.text} bg-amber-50 mb-1 border border-current">
+                            ${reward.category}
+                        </span>
+                        <p id="tray-prize-text" class="text-sm md:text-base font-black text-amber-900 leading-snug">${reward.name}</p>
+                    </div>
+                    <button id="btn-tray-copy" class="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white font-black text-xs rounded-lg shadow-sm transition active:scale-95 flex items-center gap-1">
+                        <i class="fa-regular fa-copy"></i>
+                        <span>複製內容</span>
+                    </button>
+                </div>
+            `;
+
+            // 綁定托盤複製按鈕事件
+            document.getElementById('btn-tray-copy').addEventListener('click', function() {
+                executeCopy(reward.name, this);
+            });
+        }
+
+        // 彈窗複製按鈕事件
+        btnModalCopy.addEventListener('click', function() {
+            executeCopy(lastSelectedPrizeText, this);
+        });
+
+        btnCloseWin.addEventListener('click', () => {
+            winModal.classList.add('hidden');
+        });
+
+        winModal.addEventListener('click', (e) => {
+            if (e.target === winModal) {
+                winModal.classList.add('hidden');
+            }
+        });
+
+        // ----------------- 初始化應用 -----------------
+        window.onload = function() {
+            initApp();
+        };
+
+    </script>
+</body>
+</html>
