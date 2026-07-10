@@ -17,40 +17,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let isDragging = false;
 
-  // Setup Form Submit
-  setupForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    currentUser.name = document.getElementById('user-name').value;
-    currentUser.desc = document.getElementById('user-desc').value;
-
-    const groupInput = document.getElementById('group-code') ? document.getElementById('group-code').value.trim() : '';
-    currentUser.dateGroup = groupInput || 'default';
-
-    // Pick a cute animal emoji based on the name
+  const userNameInput = document.getElementById('user-name');
+  
+  // Dynamic Emoji update based on name
+  userNameInput.addEventListener('input', () => {
+    const name = userNameInput.value.trim() || '匿名';
     const animals = ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐧','🐤','🦆','🦉','🦄','🐝','🐢','🐙','🐬','🐳','🦔','🦦','🦥'];
     let hash = 0;
-    for (let i = 0; i < currentUser.name.length; i++) {
-      hash = currentUser.name.charCodeAt(i) + ((hash << 5) - hash);
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
     }
     const index = Math.abs(hash) % animals.length;
     avatarEmoji.textContent = animals[index];
-    
-    // Switch screens
-    setupScreen.style.display = 'none';
-    appScreen.style.display = 'flex';
-    
-    // Reset avatar position
-    currentUser.x = 50;
-    currentUser.y = 50;
-    updateAvatarPosition();
-    avatar.style.display = 'flex';
   });
-
-  // Back Button
-  btnBack.addEventListener('click', () => {
-    appScreen.style.display = 'none';
-    setupScreen.style.display = 'flex';
-  });
+  
+  // trigger initial emoji
+  userNameInput.dispatchEvent(new Event('input'));
 
   // Drag and Drop Logic
   avatar.addEventListener('mousedown', startDrag);
@@ -111,6 +93,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Submit Data
   btnSubmit.addEventListener('click', () => {
+    // Read current form values
+    const nameInput = document.getElementById('user-name').value.trim();
+    const descInput = document.getElementById('user-desc').value.trim();
+    const groupInput = document.getElementById('group-code') ? document.getElementById('group-code').value.trim() : '';
+    
+    if (!nameInput || !descInput) {
+      alert("請輸入你的名字與形容自己的一句話！");
+      return;
+    }
+
+    currentUser.name = nameInput;
+    currentUser.desc = descInput;
+    currentUser.dateGroup = groupInput || 'default';
+
     // Determine quadrant color for the badge
     let color = 'gray';
     if (currentUser.x < 50 && currentUser.y < 50) color = 'red';
@@ -140,11 +136,17 @@ document.addEventListener('DOMContentLoaded', () => {
         // Reset form
         document.getElementById('user-name').value = '';
         document.getElementById('user-desc').value = '';
-        btnBack.click();
+        currentUser.x = 50;
+        currentUser.y = 50;
+        updateAvatarPosition();
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = '確認送出';
       })
       .catch((error) => {
         console.error("Error writing document: ", error);
         alert("傳送失敗，請再試一次！");
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = '確認送出';
       });
   });
 });

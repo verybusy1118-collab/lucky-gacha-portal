@@ -12,38 +12,27 @@
   </div>
 
   <div class="container">
-    <!-- Setup Screen (Form) -->
-    <div id="setup-screen" class="setup-screen">
-      <div class="glass-panel">
-        <h1 style="margin-bottom: 1rem; text-align: center;">探索你的情緒座標</h1>
-        <p style="text-align: center; margin-bottom: 2rem; color: #cbd5e1;">請輸入你的名字與一句形容現在自己的話，讓我們為你打造專屬的情緒圖騰。</p>
-        
-        <form id="setup-form" class="setup-form">
+    <div id="app-screen" class="app-screen" style="display: flex;">
+      <div class="header">
+        <h1 style="margin-bottom: 0.5rem;">探索你的情緒座標</h1>
+        <p>請輸入你的名字與狀態，並將圖騰移動到你的專屬情緒位置</p>
+      </div>
+
+      <div class="glass-panel" style="width: 100%; max-width: 800px; padding: 1.5rem; margin-bottom: 1rem;">
+        <form id="setup-form" class="setup-form" style="max-width: 100%; display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 1rem; align-items: center; margin: 0;">
           <div class="input-group">
             <label for="user-name">你的名字</label>
             <input type="text" id="user-name" placeholder="例如：小明" required maxlength="10">
           </div>
-          
           <div class="input-group">
             <label for="user-desc">形容自己的一句話</label>
-            <textarea id="user-desc" rows="3" placeholder="例如：今天充滿幹勁！" required maxlength="50"></textarea>
+            <input type="text" id="user-desc" placeholder="例如：今天充滿幹勁！" required maxlength="50">
           </div>
-          
           <div class="input-group">
             <label for="group-code">日期 (選填)</label>
             <input type="text" id="group-code" placeholder="例如：0701" maxlength="20">
           </div>
-          
-          <button type="submit" class="btn">生成專屬圖騰</button>
         </form>
-      </div>
-    </div>
-
-    <!-- App Screen (Map Drag & Drop) -->
-    <div id="app-screen" class="app-screen">
-      <div class="header">
-        <h1>將圖騰移動到你的情緒位置</h1>
-        <p>橫軸代表「愉悅度」，縱軸代表「能量程度」</p>
       </div>
 
       <div class="map-container" id="map-container">
@@ -59,14 +48,13 @@
         <div class="axis-label label-right">高愉悅</div>
 
         <!-- Draggable Avatar -->
-        <div id="avatar" class="avatar-3d" style="display: none; left: 50%; top: 50%;">
-          <span id="avatar-emoji" style="font-size: 40px; line-height: 1;"></span>
+        <div id="avatar" class="avatar-3d" style="display: flex; left: 50%; top: 50%;">
+          <span id="avatar-emoji" style="font-size: 40px; line-height: 1;">🐶</span>
         </div>
       </div>
 
       <div class="controls">
-        <button id="btn-back" class="btn" style="background: rgba(255,255,255,0.1); color: white;">重新設定</button>
-        <button id="btn-submit" class="btn">確認送出</button>
+        <button id="btn-submit" class="btn" style="width: 200px;">確認送出</button>
       </div>
     </div>
   </div>
