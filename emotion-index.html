@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>?ÖÁ??ÄË°?- ‰Ω†Á??ÖÁ?Â∫ßÊ?</title>
+  <link rel="stylesheet" href="emotion-style.css">
+</head>
+<body>
+  <div class="nav-links">
+    <a href="emotion-dashboard.html">ÂæåÂè∞Áµ±Ë? Dashboard &rarr;</a>
+  </div>
+
+  <div class="container">
+    <!-- Setup Screen (Form) -->
+    <div id="setup-screen" class="setup-screen">
+      <div class="glass-panel">
+        <h1 style="margin-bottom: 1rem; text-align: center;">?¢Á¥¢‰Ω†Á??ÖÁ?Â∫ßÊ?</h1>
+        <p style="text-align: center; margin-bottom: 2rem; color: #cbd5e1;">Ë´ãËº∏?•‰??ÑÂ?Â≠óË?‰∏Ä?•ÂΩ¢ÂÆπÁèæ?®Ëá™Â∑±Á?Ë©±Ô?ËÆìÊ??ëÁÇ∫‰Ω†Ê??†Â?Â±¨Á??ÖÁ??ñÈ®∞??/p>
+        
+        <form id="setup-form" class="setup-form">
+          <div class="input-group">
+            <label for="user-name">‰Ω†Á??çÂ?</label>
+            <input type="text" id="user-name" placeholder="‰æãÂ?ÔºöÂ??? required maxlength="10">
+          </div>
+          
+          <div class="input-group">
+            <label for="user-desc">ÂΩ¢ÂÆπ?™Â∑±?Ñ‰??•Ë©±</label>
+            <textarea id="user-desc" rows="3" placeholder="‰æãÂ?Ôºö‰?Â§©Â?ÊªøÂππ?ÅÔ?" required maxlength="50"></textarea>
+          </div>
+          
+          <div class="input-group">
+            <label for="group-code">?•Ê? (?∏Â°´)</label>
+            <input type="text" id="group-code" placeholder="‰æãÂ?Ôº?701" maxlength="20">
+          </div>
+          
+          <button type="submit" class="btn">?üÊ?Â∞àÂ±¨?ñÈ®∞</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- App Screen (Map Drag & Drop) -->
+    <div id="app-screen" class="app-screen">
+      <div class="header">
+        <h1>Â∞áÂ?È®∞Áßª?ïÂà∞‰Ω†Á??ÖÁ?‰ΩçÁΩÆ</h1>
+        <p>Ê©´Ëª∏‰ª?°®?åÊ??ÖÂ∫¶?çÔ?Á∏±Ëª∏‰ª?°®?åËÉΩ?èÁ?Â∫¶„Ä?/p>
+      </div>
+
+      <div class="map-container" id="map-container">
+        <!-- 10x10 Grid injected via emotion-grid.js -->
+        <div class="mood-grid"></div>
+        
+        <!-- Axes -->
+        <div class="axis-x"></div>
+        <div class="axis-y"></div>
+        <div class="axis-label label-top">È´òËÉΩ??/div>
+        <div class="axis-label label-bottom">‰ΩéËÉΩ??/div>
+        <div class="axis-label label-left">‰ΩéÊ???/div>
+        <div class="axis-label label-right">È´òÊ???/div>
+
+        <!-- Draggable Avatar -->
+        <div id="avatar" class="avatar-3d" style="display: none; left: 50%; top: 50%;">
+          <span id="avatar-emoji" style="font-size: 40px; line-height: 1;"></span>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="btn-back" class="btn" style="background: rgba(255,255,255,0.1); color: white;">?çÊñ∞Ë®≠Â?</button>
+        <button id="btn-submit" class="btn">Á¢∫Ë??ÅÂá∫</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="emotion-grid.js"></script>
+  <script src="emotion-app.js"></script>
+</body>
+</html>

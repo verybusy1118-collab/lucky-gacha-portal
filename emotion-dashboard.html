@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>?…ç??€è¡?- å¾Œå°çµ±è?</title>
+  <link rel="stylesheet" href="emotion-style.css">
+</head>
+<body>
+  <div class="nav-links">
+    <a href="emotion-index.html">&larr; è¿”å??ƒè?æ´»å?</a>
+  </div>
+
+  <div class="container" style="display: flex; flex-direction: column; align-items: center; padding-top: 4rem;">
+    <div class="header" style="margin-bottom: 10px;">
+      <h1>?…ç?çµ±è??€è¡¨æ¿</h1>
+      <p>é»žæ?åº§æ?ä¸Šç??“å??¯ä»¥?¥ç?è©³ç´°?§å®¹</p>
+      <div style="margin-top: 1rem; display: flex; gap: 10px; justify-content: center;">
+        <input type="text" id="group-code-input" placeholder="è¼¸å…¥?¥æ??¥ç? (ä¾‹å?: 0701)" style="padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.5); color: white; width: 250px;">
+        <button id="btn-load-group" class="btn" style="padding: 10px 20px; font-size: 1rem; margin-top: 0;">è¼‰å…¥</button>
+      </div>
+    </div>
+
+    <div class="map-container" id="dashboard-map">
+      <!-- 10x10 Grid injected via grid.js -->
+      <div class="mood-grid"></div>
+      
+      <!-- Axes -->
+      <div class="axis-x"></div>
+      <div class="axis-y"></div>
+      <div class="axis-label label-top">é«˜èƒ½??/div>
+      <div class="axis-label label-bottom">ä½Žèƒ½??/div>
+      <div class="axis-label label-left">ä½Žæ???/div>
+      <div class="axis-label label-right">é«˜æ???/div>
+
+      <!-- Bubbles will be injected here via JS -->
+    </div>
+    
+    <div style="margin-top: 2rem;">
+      <button id="btn-clear" class="btn" style="background: #ef4444;">æ¸…ç©º?€?‰è???/button>
+    </div>
+  </div>
+
+  <!-- Modal for showing participants in a cluster -->
+  <div id="details-modal" class="modal-overlay">
+    <div class="modal-content glass-panel">
+      <button class="close-btn" id="close-modal">&times;</button>
+      <h2 id="modal-title" style="margin-bottom: 1rem; color: var(--accent);">æ­¤å??Ÿç??ƒè???/h2>
+      <div id="modal-list">
+        <!-- Participant cards injected here -->
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="grid.js"></script>
+  <script src="dashboard.js?v=3"></script>
+</body>
+</html>
