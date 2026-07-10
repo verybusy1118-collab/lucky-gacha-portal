@@ -245,6 +245,9 @@
             </div>
             
             <div class="bg-gray-50 py-4 px-6 border-t flex justify-end gap-3 flex-wrap">
+                <button onclick="clearAllTeachers()" class="px-6 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-bold rounded-xl transition-colors text-sm">
+                    完全清除名單
+                </button>
                 <button onclick="resetToDefault()" class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold rounded-xl transition-colors text-sm">
                     恢復預設名單
                 </button>
@@ -299,8 +302,9 @@
             { school: '豐年國小', name: '陳0行' }
         ];
 
-        // 從 LocalStorage 載入，若無則使用預設清單
-        let initialTeachers = JSON.parse(localStorage.getItem('gachaTeachers')) || JSON.parse(JSON.stringify(defaultTeachers));
+        // 從 LocalStorage 載入，若無則預設為空清單 (避免一開就看到既定名單)
+        let savedTeachers = localStorage.getItem('gachaTeachers');
+        let initialTeachers = savedTeachers ? JSON.parse(savedTeachers) : [];
 
         // 扭蛋顏色庫
         const colors = [
@@ -451,8 +455,15 @@
         }
 
         function resetToDefault() {
-            if (confirm("確定要恢復預設的初始名單嗎？這將會清空您自己新增的人員。")) {
+            if (confirm("確定要恢復預設的老師名單嗎？這將會覆蓋您目前的設定。")) {
                 tempTeachers = JSON.parse(JSON.stringify(defaultTeachers));
+                renderSettingsList();
+            }
+        }
+
+        function clearAllTeachers() {
+            if (confirm("確定要完全清除所有名單嗎？此動作將清空所有參與者。")) {
+                tempTeachers = [];
                 renderSettingsList();
             }
         }
