@@ -103,6 +103,7 @@
         <div class="flex flex-col justify-center space-y-6 border-4 border-black rounded-3xl p-8 bg-gray-50 overflow-hidden relative">
             
             <div class="text-center mb-2">
+                <div id="display-date" class="text-2xl font-bold text-gray-500 mb-2 hidden"></div>
                 <h1 id="display-subject" class="text-5xl md:text-6xl font-extrabold tracking-widest text-blue-900 drop-shadow-sm">尚未選擇科目</h1>
                 <div id="subject-time-range" class="text-2xl font-bold text-gray-600 mt-3">--:-- ~ --:--</div>
             </div>
@@ -192,6 +193,14 @@
                     <!-- 右欄：其他設定 -->
                     <div class="space-y-6 lg:col-span-2">
                         
+                        <!-- 日期設定 -->
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+                            <h3 class="text-lg font-bold text-gray-800 mb-3 border-b pb-2"><i class="fa-solid fa-calendar-days text-orange-500"></i> 考試日期設定</h3>
+                            <div>
+                                <input type="date" id="setting-date" class="w-full border rounded-lg px-3 py-2 text-lg font-bold text-gray-700">
+                            </div>
+                        </div>
+
                         <!-- 變色提醒設定 -->
                         <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
                             <h3 class="text-lg font-bold text-gray-800 mb-3 border-b pb-2"><i class="fa-solid fa-palette text-pink-500"></i> 三階段倒數變色提醒</h3>
@@ -248,6 +257,7 @@
     <script>
         // 資料結構
         let examData = {
+            examDate: '',
             schedule: [
                 { id: '1', subject: '國語科 期中考', startTime: { ampm: 'AM', h: '08', m: '00' }, endTime: { ampm: 'AM', h: '09', m: '00' } },
                 { id: '2', subject: '數學科 期中考', startTime: { ampm: 'AM', h: '09', m: '10' }, endTime: { ampm: 'AM', h: '10', m: '10' } },
@@ -330,6 +340,19 @@
             const scheduleContainer = document.getElementById('schedule-container');
             scheduleContainer.innerHTML = '';
             
+            const dateEl = document.getElementById('display-date');
+            if (examData.examDate) {
+                const d = new Date(examData.examDate);
+                if (!isNaN(d)) {
+                    dateEl.textContent = `${d.getFullYear()}年${String(d.getMonth()+1).padStart(2,'0')}月${String(d.getDate()).padStart(2,'0')}日`;
+                    dateEl.classList.remove('hidden');
+                } else {
+                    dateEl.classList.add('hidden');
+                }
+            } else {
+                dateEl.classList.add('hidden');
+            }
+
             const now = new Date();
             
             // 檢查哪些科目已經結束並自動切換
@@ -505,6 +528,7 @@
             editingSchedule = JSON.parse(JSON.stringify(examData.schedule));
             renderSettingScheduleList();
 
+            document.getElementById('setting-date').value = examData.examDate || '';
             document.getElementById('setting-stage1').value = examData.stages.stage1;
             document.getElementById('setting-stage2').value = examData.stages.stage2;
             document.getElementById('setting-stage3').value = examData.stages.stage3;
@@ -545,6 +569,8 @@
                 }
             });
             examData.schedule = newSchedule;
+
+            examData.examDate = document.getElementById('setting-date').value;
 
             examData.stages.stage1 = parseInt(document.getElementById('setting-stage1').value) || 10;
             examData.stages.stage2 = parseInt(document.getElementById('setting-stage2').value) || 5;
