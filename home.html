@@ -13,32 +13,29 @@
             margin: 0;
             padding: 0;
             height: 100%;
-            background-color: #f7ede2; /* 溫暖的背景色，與圖片邊緣相近 */
+            background-color: #f7ede2;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
-            overflow: auto; /* allow scrolling if needed */
+            overflow: hidden;
             font-family: 'Nunito', sans-serif;
         }
 
         .image-container {
-            flex: 1;
+            position: relative;
             width: 100%;
+            height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 15px 0;
-            min-height: 0; /* 允許圖片縮小以留出空間給按鈕 */
         }
 
         img {
-            max-width: 95%;
-            max-height: 100%;
+            max-width: 100%;
+            max-height: 100vh;
             object-fit: contain;
             box-shadow: 0 10px 30px rgba(0,0,0,0.15);
             animation: fadeIn 0.8s ease-out;
-            border-radius: 12px;
         }
         
         @keyframes fadeIn {
@@ -46,16 +43,19 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* 可愛標籤容器 */
+        /* 可愛標籤容器 - 浮動在畫面上方，整體往上移動避免擋字 */
         .tags-container {
-            position: relative;
+            position: absolute;
+            bottom: 22%; /* 往上移，避開最底下的字 */
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
             flex-wrap: wrap;
-            gap: 15px 20px;
+            gap: 20px;
             justify-content: center;
-            width: 95%;
-            max-width: 900px;
-            padding-bottom: 30px;
+            width: 90%;
+            max-width: 800px;
+            z-index: 10;
             animation: bounceInUp 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.5s both;
         }
 
@@ -64,35 +64,59 @@
             100% { opacity: 1; transform: translate(-50%, 0) scale(1); }
         }
 
-        /* 可愛按鈕樣式 */
+        /* 可愛按鈕樣式 - 預設為圓形小圖示 */
         .cute-tag {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(8px);
             border: 4px solid #fff;
-            color: #4b5563; /* 深灰字體 */
-            padding: 12px 24px;
-            border-radius: 50px;
+            color: #4b5563;
+            box-sizing: border-box;
+            height: 64px;
+            width: 64px; /* 預設寬度只有圓形大小 */
+            border-radius: 32px;
             font-size: 1.15rem;
             font-weight: 800;
             cursor: pointer;
             box-shadow: 0 8px 15px rgba(0,0,0,0.1), inset 0 -3px 0 rgba(0,0,0,0.05);
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             display: flex;
             align-items: center;
-            gap: 10px;
+            overflow: hidden; /* 隱藏文字 */
             text-decoration: none;
-            letter-spacing: 0.5px;
+            padding: 0;
+            white-space: nowrap;
         }
 
         /* 微微交錯傾斜，創造活潑感 */
         .cute-tag:nth-child(odd) { transform: rotate(-3deg); }
         .cute-tag:nth-child(even) { transform: rotate(3deg); }
 
+        .cute-tag i {
+            font-size: 1.5rem;
+            min-width: 56px; /* 64px寬度 - 8px邊框 = 56px內容，讓圖示完美置中 */
+            text-align: center;
+            transition: color 0.3s;
+        }
+
+        .cute-tag span {
+            opacity: 0;
+            transform: translateX(-15px);
+            transition: all 0.3s ease;
+        }
+
+        /* Hover 狀態 - 展開顯示文字 */
         .cute-tag:hover {
-            transform: translateY(-8px) scale(1.08) rotate(0deg);
+            width: 230px; /* 展開寬度 */
+            transform: translateY(-8px) scale(1.05) rotate(0deg);
             z-index: 2;
             color: #fff;
             box-shadow: 0 15px 25px rgba(0,0,0,0.15), inset 0 -3px 0 rgba(0,0,0,0.1);
+        }
+
+        .cute-tag:hover span {
+            opacity: 1;
+            transform: translateX(0);
+            padding-right: 25px; /* 右側留白 */
         }
         
         .cute-tag:active {
@@ -108,7 +132,6 @@
         .cute-tag:nth-child(6):hover { background: #F472B6; border-color: #F472B6; }
 
         /* Icon 顏色預設狀態 */
-        .cute-tag i { font-size: 1.3rem; transition: color 0.3s; }
         .cute-tag:nth-child(1) i { color: #FF7E67; }
         .cute-tag:nth-child(2) i { color: #4ADE80; }
         .cute-tag:nth-child(3) i { color: #60A5FA; }
@@ -121,16 +144,7 @@
 
         @media (max-width: 768px) {
             .tags-container {
-                bottom: 2%;
-                gap: 10px;
-            }
-            .cute-tag {
-                padding: 10px 18px;
-                font-size: 0.95rem;
-                border-width: 3px;
-            }
-            .cute-tag i {
-                font-size: 1.1rem;
+                bottom: 15%;
             }
         }
     </style>
@@ -140,27 +154,26 @@
     <div class="image-container">
         <!-- 原本的首頁封面圖 -->
         <img src="cover.jpg" alt="教師工具小幫手封面">
-    </div>
         
-    <!-- 不再浮動，獨立於圖片下方的可愛標籤選單 -->
-    <div class="tags-container">
+        <!-- 浮動在圖片上方的可愛標籤選單 -->
+        <div class="tags-container">
             <button class="cute-tag" onclick="navTo('gacha.html', 1)">
-                <i class="fa-solid fa-chalkboard-user"></i> 老師抽籤扭蛋機
+                <i class="fa-solid fa-chalkboard-user"></i> <span>老師抽籤扭蛋機</span>
             </button>
             <button class="cute-tag" onclick="navTo('class-gacha.html', 4)">
-                <i class="fa-solid fa-users"></i> 班級學生扭蛋
+                <i class="fa-solid fa-users"></i> <span>班級學生扭蛋</span>
             </button>
             <button class="cute-tag" onclick="navTo('healing-gacha.html', 3)">
-                <i class="fa-solid fa-heart-circle-check"></i> 心靈解憂扭蛋機
+                <i class="fa-solid fa-heart-circle-check"></i> <span>心靈解憂扭蛋機</span>
             </button>
             <button class="cute-tag" onclick="navTo('emotion-index.html', 5)">
-                <i class="fa-solid fa-face-smile-beam"></i> 專屬情緒地圖
+                <i class="fa-solid fa-face-smile-beam"></i> <span>專屬情緒地圖</span>
             </button>
             <button class="cute-tag" onclick="navTo('clock.html', 2)">
-                <i class="fa-solid fa-stopwatch"></i> 倒數計時小精靈
+                <i class="fa-solid fa-stopwatch"></i> <span>倒數計時小精靈</span>
             </button>
             <button class="cute-tag" onclick="navTo('exam-timer.html', 6)">
-                <i class="fa-solid fa-bell"></i> 考試重要提醒
+                <i class="fa-solid fa-bell"></i> <span>考試重要提醒</span>
             </button>
         </div>
     </div>
