@@ -246,7 +246,10 @@
                 <section class="card p-5 col-span-1 md:col-span-3">
                     <h3 class="text-lg font-bold text-rose-600 mb-4 border-b pb-2 flex justify-between items-center">
                         <span><i class="fa-solid fa-book-medical"></i> 學生行為事件紀錄簿</span>
-                        <button onclick="openManualIncidentModal()" class="px-3 py-1 bg-rose-100 text-rose-700 rounded-lg text-sm hover:bg-rose-200 transition-colors"><i class="fa-solid fa-plus"></i> 新增紀錄</button>
+                        <div class="flex gap-2">
+                            <button onclick="exportIncidentsCSV()" class="px-3 py-1 bg-white border border-rose-200 text-rose-600 rounded-lg text-sm hover:bg-rose-50 transition-colors shadow-sm"><i class="fa-solid fa-file-csv"></i> 匯出 Excel (CSV)</button>
+                            <button onclick="openManualIncidentModal()" class="px-3 py-1 bg-rose-100 text-rose-700 rounded-lg text-sm hover:bg-rose-200 transition-colors shadow-sm"><i class="fa-solid fa-plus"></i> 新增紀錄</button>
+                        </div>
                     </h3>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm whitespace-nowrap">
@@ -1204,6 +1207,47 @@
                 }
                 event.target.value = ''; // Reset input
             });
+        }
+
+        function exportIncidentsCSV() {
+            const incidents = assistantData[currentClassId].incidents || [];
+            if(incidents.length === 0) {
+                Swal.fire({ icon: 'warning', title: '目前沒有紀錄可匯出', timer: 1500, showConfirmButton: false });
+                return;
+            }
+            
+            // BOM for Excel UTF-8 recognition
+            let csvContent = "\uFEFF日期,學生姓名,事件分類,具體事項,處理過程,家長/行政聯繫,其它補充\n";
+            
+            const sorted = [...incidents].sort((a,b) => new Date(b.date) - new Date(a.date));
+            sorted.forEach(inc => {
+                const escapeCSV = (str) => {
+                    if (!str) return '""';
+                    return '"' + str.replace(/"/g, '""').replace(/\n/g, ' ') + '"';
+                };
+                const row = [
+                    escapeCSV(inc.date),
+                    escapeCSV(inc.student),
+                    escapeCSV(inc.category),
+                    escapeCSV(inc.text),
+                    escapeCSV(inc.process),
+                    escapeCSV(inc.contact),
+                    escapeCSV(inc.note)
+                ];
+                csvContent += row.join(",") + "\n";
+            });
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", url);
+            const dateStr = new Date().toISOString().split('T')[0];
+            downloadAnchorNode.setAttribute("download", `學生行為事件紀錄_${dateStr}.csv`);
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+            
+            Swal.fire({ icon: 'success', title: '匯出成功！', text: '已匯出可供 Excel 讀取的 CSV 檔案', timer: 2000, showConfirmButton: false });
         }
 
         // Boot
