@@ -121,11 +121,16 @@
         </svg>
     </button>
 
-    <div class="text-center mb-8 z-10">
+    <div class="text-center mb-8 z-10 flex flex-col items-center">
         <h1 class="text-4xl md:text-5xl font-black text-emerald-700 drop-shadow-md mb-2 tracking-wider">🎉 歡樂扭蛋機 🎉</h1>
-        <p class="text-gray-600 font-bold bg-white/80 px-4 py-1 rounded-full inline-block shadow-sm">
-            剩餘名額: <span id="remainCount" class="text-rose-500 text-xl">15</span>
-        </p>
+        
+        <div class="flex items-center gap-4 mt-2">
+            <select id="mainClassSelector" onchange="changeMainClass(this.value)" class="text-xl font-bold bg-white/90 border-4 border-emerald-300 rounded-full px-4 py-1 text-emerald-800 shadow-sm cursor-pointer outline-none focus:border-emerald-500 transition-colors hidden"></select>
+            
+            <p class="text-gray-600 font-bold bg-white/80 px-4 py-1 rounded-full shadow-sm">
+                剩餘名額: <span id="remainCount" class="text-rose-500 text-xl">15</span>
+            </p>
+        </div>
     </div>
 
     <!-- 左右排版容器 -->
@@ -208,6 +213,24 @@
             </div>
             
             <div class="p-6 overflow-y-auto flex-1">
+                
+                <!-- 班級管理區塊 -->
+                <div class="bg-purple-50 p-4 rounded-xl mb-6 border border-purple-200">
+                    <h3 class="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-purple-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+                        </svg> 目前編輯的班級
+                    </h3>
+                    <div class="flex flex-col sm:flex-row gap-3 items-center">
+                        <select id="settingsClassSelector" onchange="changeSettingsClass(this.value)" class="w-full sm:w-1/2 px-3 py-2 border rounded-lg font-bold text-purple-900 bg-white focus:ring-2 focus:ring-purple-400 outline-none cursor-pointer"></select>
+                        <div class="flex gap-2 w-full sm:w-auto">
+                            <button onclick="createNewClass()" class="flex-1 sm:flex-none px-3 py-2 bg-purple-500 hover:bg-purple-600 text-white font-bold rounded-lg transition-colors text-sm whitespace-nowrap"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>新增</button>
+                            <button onclick="renameCurrentClass()" class="flex-1 sm:flex-none px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg transition-colors text-sm whitespace-nowrap"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>更名</button>
+                            <button onclick="deleteCurrentClass()" class="flex-1 sm:flex-none px-3 py-2 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition-colors text-sm whitespace-nowrap"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>刪除</button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- 新增參與者 -->
                 <div class="bg-emerald-50 p-4 rounded-xl mb-4 border border-emerald-100 flex gap-2 items-end flex-wrap">
                     <div class="flex-1 min-w-[120px]">
@@ -302,9 +325,29 @@
             { school: '豐年國小', name: '陳0行' }
         ];
 
-        // 從 LocalStorage 載入，若無則預設為空清單 (避免一開就看到既定名單)
-        let savedTeachers = localStorage.getItem('gachaTeachers');
-        let initialTeachers = savedTeachers ? JSON.parse(savedTeachers) : [];
+        // 資料結構改版：支援多班級
+        let savedClassesData = localStorage.getItem('gachaClassesData');
+        let gachaClasses = {
+            activeClassId: 'default',
+            classes: [
+                { id: 'default', name: '預設班級', participants: JSON.parse(JSON.stringify(defaultTeachers)) }
+            ]
+        };
+
+        if (savedClassesData) {
+            gachaClasses = JSON.parse(savedClassesData);
+        } else {
+            // 無痛轉移舊資料
+            let oldData = localStorage.getItem('gachaTeachers');
+            if (oldData) {
+                gachaClasses.classes[0].participants = JSON.parse(oldData);
+                localStorage.setItem('gachaClassesData', JSON.stringify(gachaClasses));
+            }
+        }
+
+        function getActiveClass() {
+            return gachaClasses.classes.find(c => c.id === gachaClasses.activeClassId) || gachaClasses.classes[0];
+        }
 
         // 扭蛋顏色庫
         const colors = [
@@ -313,6 +356,7 @@
         ];
 
         // 狀態變數
+        let initialTeachers = JSON.parse(JSON.stringify(getActiveClass().participants));
         let availableTeachers = [...initialTeachers];
         let history = [];
         let isAnimating = false;
@@ -341,6 +385,9 @@
         const newNameInput = document.getElementById('newName');
         let tempTeachers = []; // 編輯中的清單
 
+        let tempGachaClasses = null;
+        let currentSettingsClassId = null;
+
         // --- 後台設定邏輯 ---
         function openSettings() {
             if (isAnimating) {
@@ -357,8 +404,12 @@
                 return;
             }
 
-            tempTeachers = JSON.parse(JSON.stringify(initialTeachers)); // 複製一份編輯
-            renderSettingsList();
+            tempGachaClasses = JSON.parse(JSON.stringify(gachaClasses));
+            currentSettingsClassId = tempGachaClasses.activeClassId;
+            
+            renderSettingsClassSelector();
+            loadSettingsClass(currentSettingsClassId);
+            
             settingsModal.classList.remove('hidden');
             settingsModal.classList.add('flex');
         }
@@ -391,6 +442,66 @@
                 `;
                 settingsList.appendChild(item);
             });
+        }
+
+        function renderSettingsClassSelector() {
+            const sel = document.getElementById('settingsClassSelector');
+            if (!sel) return;
+            sel.innerHTML = '';
+            tempGachaClasses.classes.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.name;
+                if (c.id === currentSettingsClassId) opt.selected = true;
+                sel.appendChild(opt);
+            });
+        }
+
+        function changeSettingsClass(id) {
+            const cls = tempGachaClasses.classes.find(c => c.id === currentSettingsClassId);
+            if (cls) cls.participants = JSON.parse(JSON.stringify(tempTeachers));
+            currentSettingsClassId = id;
+            loadSettingsClass(id);
+        }
+
+        function loadSettingsClass(id) {
+            const cls = tempGachaClasses.classes.find(c => c.id === id);
+            tempTeachers = JSON.parse(JSON.stringify(cls.participants || []));
+            renderSettingsList();
+        }
+
+        function createNewClass() {
+            const name = prompt("請輸入新班級的名稱：");
+            if (!name || !name.trim()) return;
+            const newId = 'class_' + Date.now();
+            const cls = tempGachaClasses.classes.find(c => c.id === currentSettingsClassId);
+            if (cls) cls.participants = JSON.parse(JSON.stringify(tempTeachers));
+            tempGachaClasses.classes.push({ id: newId, name: name.trim(), participants: [] });
+            currentSettingsClassId = newId;
+            loadSettingsClass(newId);
+            renderSettingsClassSelector();
+        }
+
+        function renameCurrentClass() {
+            const cls = tempGachaClasses.classes.find(c => c.id === currentSettingsClassId);
+            if (!cls) return;
+            const newName = prompt("請輸入新名稱：", cls.name);
+            if (!newName || !newName.trim()) return;
+            cls.name = newName.trim();
+            renderSettingsClassSelector();
+        }
+
+        function deleteCurrentClass() {
+            if (tempGachaClasses.classes.length <= 1) {
+                alert("至少需要保留一個班級！");
+                return;
+            }
+            if (confirm("確定要刪除這個班級及其所有名單嗎？")) {
+                tempGachaClasses.classes = tempGachaClasses.classes.filter(c => c.id !== currentSettingsClassId);
+                currentSettingsClassId = tempGachaClasses.classes[0].id;
+                loadSettingsClass(currentSettingsClassId);
+                renderSettingsClassSelector();
+            }
         }
 
         function updateTeacherTemp(index, field, value) {
@@ -469,17 +580,22 @@
         }
 
         function saveSettings() {
-            if (tempTeachers.length === 0) {
-                if (!confirm("您設定的名單是空的，確定要儲存嗎？")) return;
+            const cls = tempGachaClasses.classes.find(c => c.id === currentSettingsClassId);
+            if (cls) cls.participants = JSON.parse(JSON.stringify(tempTeachers));
+            
+            if (tempGachaClasses.classes.length > 0 && !tempGachaClasses.classes.find(c => c.id === tempGachaClasses.activeClassId)) {
+                tempGachaClasses.activeClassId = tempGachaClasses.classes[0].id;
             }
             
-            // 儲存至全域並寫入 LocalStorage
-            initialTeachers = JSON.parse(JSON.stringify(tempTeachers));
-            localStorage.setItem('gachaTeachers', JSON.stringify(initialTeachers));
+            gachaClasses = JSON.parse(JSON.stringify(tempGachaClasses));
+            localStorage.setItem('gachaClassesData', JSON.stringify(gachaClasses));
             
             closeSettings();
-            resetMachine(); // 強制重置機器以套用新名單
-            showCustomMessage("✅ 名單已儲存並成功套用！");
+            
+            updateMainClassSelector();
+            changeMainClass(gachaClasses.activeClassId);
+            
+            showCustomMessage("✅ 設定已儲存並成功套用！");
         }
 
         // --- 扭蛋機核心邏輯 ---
@@ -734,8 +850,34 @@
             }, 2000);
         }
 
+        function updateMainClassSelector() {
+            const sel = document.getElementById('mainClassSelector');
+            if (!sel) return;
+            sel.innerHTML = '';
+            gachaClasses.classes.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.name;
+                if (c.id === gachaClasses.activeClassId) opt.selected = true;
+                sel.appendChild(opt);
+            });
+            if (gachaClasses.classes.length > 1) {
+                sel.classList.remove('hidden');
+            } else {
+                sel.classList.add('hidden');
+            }
+        }
+
+        function changeMainClass(id) {
+            gachaClasses.activeClassId = id;
+            localStorage.setItem('gachaClassesData', JSON.stringify(gachaClasses));
+            initialTeachers = JSON.parse(JSON.stringify(getActiveClass().participants));
+            resetMachine();
+        }
+
         // 初始載入
         window.onload = () => {
+            updateMainClassSelector();
             initBalls();
             updateUI();
         };
