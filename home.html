@@ -15,6 +15,7 @@
             height: 100%;
             background-color: #f7ede2; /* 溫暖的背景色，與圖片邊緣相近 */
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             overflow: auto; /* allow scrolling if needed */
@@ -22,20 +23,22 @@
         }
 
         .image-container {
-            position: relative;
+            flex: 1;
             width: 100%;
-            height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 15px 0;
+            min-height: 0; /* 允許圖片縮小以留出空間給按鈕 */
         }
 
         img {
-            max-width: 100%;
+            max-width: 95%;
             max-height: 100%;
             object-fit: contain;
             box-shadow: 0 10px 30px rgba(0,0,0,0.15);
             animation: fadeIn 0.8s ease-out;
+            border-radius: 12px;
         }
         
         @keyframes fadeIn {
@@ -45,17 +48,14 @@
 
         /* 可愛標籤容器 */
         .tags-container {
-            position: absolute;
-            bottom: 30px; /* 放在畫面底部 */
-            left: 50%;
-            transform: translateX(-50%);
+            position: relative;
             display: flex;
             flex-wrap: wrap;
             gap: 15px 20px;
             justify-content: center;
-            width: 90%;
-            max-width: 800px;
-            z-index: 10;
+            width: 95%;
+            max-width: 900px;
+            padding-bottom: 30px;
             animation: bounceInUp 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.5s both;
         }
 
@@ -140,9 +140,10 @@
     <div class="image-container">
         <!-- 原本的首頁封面圖 -->
         <img src="cover.jpg" alt="教師工具小幫手封面">
+    </div>
         
-        <!-- 浮動在圖片上方的可愛標籤選單 -->
-        <div class="tags-container">
+    <!-- 不再浮動，獨立於圖片下方的可愛標籤選單 -->
+    <div class="tags-container">
             <button class="cute-tag" onclick="navTo('gacha.html', 1)">
                 <i class="fa-solid fa-chalkboard-user"></i> 老師抽籤扭蛋機
             </button>
