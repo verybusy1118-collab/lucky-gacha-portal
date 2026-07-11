@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -883,5 +883,51 @@
         };
 
     </script>
+    <!-- ?函?閬?餈?擐??? -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            if (window.self === window.top) {
+                const backBtn = document.createElement("a");
+                backBtn.href = "index.html";
+                backBtn.className = "back-to-home-btn";
+                backBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:20px;height:20px;"><path d="M11.47 3.84a.75.75 0 011.06 0l8.69 8.69a.75.75 0 101.06-1.06l-8.689-8.69a2.25 2.25 0 00-3.182 0l-8.69 8.69a.75.75 0 001.061 1.06l8.69-8.69z" /><path d="M12 5.432l8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 01-.75-.75v-4.5a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75V21a.75.75 0 01-.75.75H5.625a1.875 1.875 0 01-1.875-1.875v-6.198a2.29 2.29 0 00.091-.086L12 5.432z" /></svg> 餈?擐?';
+                
+                const style = document.createElement("style");
+                style.innerHTML = \
+                    .back-to-home-btn {
+                        position: fixed;
+                        top: 15px;
+                        left: 15px;
+                        background: rgba(255, 255, 255, 0.85);
+                        backdrop-filter: blur(8px);
+                        -webkit-backdrop-filter: blur(8px);
+                        color: #4F46E5;
+                        padding: 10px 18px;
+                        border-radius: 50px;
+                        font-size: 0.95rem;
+                        font-weight: 800;
+                        text-decoration: none;
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        box-shadow: 0 4px 10px rgba(0,0,0,0.1), inset 0 0 0 2px rgba(79, 70, 229, 0.1);
+                        z-index: 999999;
+                        transition: all 0.2s ease;
+                        font-family: 'Inter', 'Nunito', sans-serif;
+                    }
+                    .back-to-home-btn:hover {
+                        background: #4F46E5;
+                        color: white;
+                        transform: translateY(-2px);
+                        box-shadow: 0 6px 15px rgba(79, 70, 229, 0.3);
+                        border-color: transparent;
+                    }
+                \;
+                document.head.appendChild(style);
+                document.body.appendChild(backBtn);
+            }
+        });
+    </script>
 </body>
 </html>
+
