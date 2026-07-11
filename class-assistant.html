@@ -232,6 +232,27 @@
             if (storedClasses) {
                 try {
                     classesData = JSON.parse(storedClasses);
+                    
+                    // Data Migration: Ensure all classes and participants have IDs (Legacy data might not have them)
+                    let migrated = false;
+                    classesData.classes.forEach((c, cIdx) => {
+                        if (!c.id) {
+                            c.id = 'class_legacy_' + Date.now() + '_' + cIdx;
+                            migrated = true;
+                        }
+                        if (c.participants) {
+                            c.participants.forEach((p, pIdx) => {
+                                if (!p.id) {
+                                    p.id = 's_legacy_' + Date.now() + '_' + cIdx + '_' + pIdx;
+                                    migrated = true;
+                                }
+                            });
+                        }
+                    });
+                    if (migrated) {
+                        localStorage.setItem('gachaClassesData', JSON.stringify(classesData));
+                    }
+                    
                 } catch(e) { console.error("Error parsing classes data", e); }
             }
             
