@@ -280,7 +280,9 @@
             errorMsg.style.display = 'none';
             iframe.style.opacity = '0';
 
-            iframe.src = url;
+            // Cache buster for development updates
+            const cacheBustedUrl = url + (url.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
+            iframe.src = cacheBustedUrl;
         }
 
         function frameLoaded() {
