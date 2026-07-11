@@ -1,0 +1,733 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>班務小秘書</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body {
+            font-family: 'Nunito', 'Noto Sans TC', sans-serif;
+            background-color: #f0fdf4; /* Light green background */
+            background-image: radial-gradient(#dcfce7 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05), inset 0 2px 0 rgba(255,255,255,1);
+            border: 1px solid rgba(255,255,255,0.4);
+            transition: transform 0.2s;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.08);
+        }
+
+        .student-pill {
+            background: #e0e7ff;
+            color: #4338ca;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            margin: 2px;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .btn-add {
+            background: #3b82f6;
+            color: white;
+            transition: all 0.2s;
+        }
+        .btn-add:hover { background: #2563eb; transform: scale(1.05); }
+        .btn-add:active { transform: scale(0.95); }
+
+        .btn-delete {
+            color: #ef4444;
+            opacity: 0.5;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .btn-delete:hover { opacity: 1; transform: scale(1.1); }
+
+        .checkbox-custom {
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 0.25rem;
+            border: 2px solid #cbd5e1;
+            cursor: pointer;
+        }
+        .checkbox-custom:checked {
+            background-color: #22c55e;
+            border-color: #22c55e;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-gray-800 p-4 md:p-8">
+
+    <!-- 返回首頁腳本將自動由外部注入，或是在這裡保留佔位 -->
+
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 bg-white/80 p-4 rounded-2xl shadow-sm backdrop-blur-sm">
+            <h1 class="text-3xl font-black text-emerald-600 flex items-center gap-3">
+                <i class="fa-solid fa-clipboard-list text-emerald-500"></i>
+                班務小秘書
+            </h1>
+            
+            <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                <select id="classSelector" class="px-4 py-2 rounded-xl border-2 border-emerald-200 bg-white text-emerald-800 font-bold focus:outline-none focus:border-emerald-400 cursor-pointer shadow-sm">
+                    <!-- Options populated via JS -->
+                </select>
+                <input type="date" id="dateSelector" class="px-4 py-2 rounded-xl border-2 border-emerald-200 bg-white text-emerald-800 font-bold focus:outline-none focus:border-emerald-400 cursor-pointer shadow-sm">
+            </div>
+        </header>
+
+        <!-- Main Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <!-- 任務與提醒 (To-Do) -->
+            <section class="card p-5 flex flex-col h-[400px]">
+                <h2 class="text-xl font-bold text-indigo-600 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-check-square"></i> 任務與提醒
+                </h2>
+                <div class="flex gap-2 mb-4">
+                    <select id="taskType" class="p-2 border rounded-lg bg-gray-50 text-sm font-semibold shrink-0">
+                        <option value="聯絡本">聯絡本</option>
+                        <option value="本日任務">本日任務</option>
+                        <option value="這節任務">這節任務</option>
+                        <option value="自訂說明">自訂說明</option>
+                    </select>
+                    <input type="text" id="taskContent" placeholder="輸入事項..." class="flex-1 p-2 border rounded-lg text-sm focus:outline-indigo-300">
+                    <button onclick="addTask()" class="btn-add w-10 rounded-lg flex justify-center items-center shrink-0"><i class="fa-solid fa-plus"></i></button>
+                </div>
+                <div id="taskList" class="flex-1 overflow-y-auto pr-2 space-y-2">
+                    <!-- Tasks will be rendered here -->
+                </div>
+            </section>
+
+            <!-- 作業處理追蹤 -->
+            <section class="card p-5 flex flex-col h-[400px]">
+                <h2 class="text-xl font-bold text-rose-500 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-book-open"></i> 作業處理追蹤
+                </h2>
+                <div class="flex gap-2 mb-4">
+                    <select id="hwCategory" class="p-2 border rounded-lg bg-gray-50 text-sm font-semibold w-24 shrink-0">
+                        <option value="缺交">缺交</option>
+                        <option value="未訂正">未訂正</option>
+                    </select>
+                    <input type="text" id="hwContent" placeholder="作業名稱 (例: 數習 P.12)" class="flex-1 p-2 border rounded-lg text-sm focus:outline-rose-300">
+                    <button onclick="openStudentModal('hw')" class="bg-indigo-100 text-indigo-700 px-3 rounded-lg text-sm font-bold hover:bg-indigo-200 transition-colors whitespace-nowrap shrink-0"><i class="fa-solid fa-user-plus"></i> 名單</button>
+                </div>
+                <!-- Pending Students Preview -->
+                <div id="hwPendingStudents" class="mb-2 text-sm hidden">
+                    <span class="text-gray-500 text-xs">已選學生：</span>
+                    <span id="hwPendingList" class="flex flex-wrap gap-1"></span>
+                </div>
+                <button id="hwAddBtn" onclick="addHomework()" class="btn-add w-full py-2 rounded-lg font-bold mb-4 hidden">加入作業紀錄</button>
+                
+                <div id="hwList" class="flex-1 overflow-y-auto pr-2 space-y-3">
+                    <!-- HW will be rendered here -->
+                </div>
+            </section>
+
+            <!-- 學生表現紀錄 -->
+            <section class="card p-5 flex flex-col h-[400px]">
+                <h2 class="text-xl font-bold text-amber-500 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-star"></i> 學生表現紀錄
+                </h2>
+                <div class="flex gap-2 mb-4">
+                    <select id="perfCategory" class="p-2 border rounded-lg bg-gray-50 text-sm font-semibold w-28 shrink-0" onchange="updatePerfColor(this)">
+                        <option value="一級棒" data-color="text-emerald-600">一級棒 👍</option>
+                        <option value="要加油" data-color="text-rose-500">要加油 💦</option>
+                    </select>
+                    <input type="text" id="perfContent" placeholder="具體事項 (例: 主動幫忙打掃)" class="flex-1 p-2 border rounded-lg text-sm focus:outline-amber-300">
+                    <button onclick="openStudentModal('perf')" class="bg-indigo-100 text-indigo-700 px-3 rounded-lg text-sm font-bold hover:bg-indigo-200 transition-colors whitespace-nowrap shrink-0"><i class="fa-solid fa-user-plus"></i> 名單</button>
+                </div>
+                <div id="perfPendingStudents" class="mb-2 text-sm hidden">
+                    <span class="text-gray-500 text-xs">已選學生：</span>
+                    <span id="perfPendingList" class="flex flex-wrap gap-1"></span>
+                </div>
+                <button id="perfAddBtn" onclick="addPerformance()" class="btn-add w-full py-2 rounded-lg font-bold mb-4 hidden">加入表現紀錄</button>
+                
+                <div id="perfList" class="flex-1 overflow-y-auto pr-2 space-y-3">
+                    <!-- Performance will be rendered here -->
+                </div>
+            </section>
+
+            <!-- 重要活動提醒 -->
+            <section class="card p-5 flex flex-col h-[400px]">
+                <h2 class="text-xl font-bold text-cyan-600 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-calendar-star"></i> 重要活動提醒 (近期)
+                </h2>
+                <div class="flex gap-2 mb-4">
+                    <input type="date" id="eventDate" class="p-2 border rounded-lg text-sm bg-gray-50 font-semibold w-36 shrink-0">
+                    <input type="text" id="eventContent" placeholder="活動名稱 (例: 校外教學)" class="flex-1 p-2 border rounded-lg text-sm focus:outline-cyan-300">
+                    <button onclick="addEvent()" class="btn-add w-10 rounded-lg flex justify-center items-center shrink-0"><i class="fa-solid fa-plus"></i></button>
+                </div>
+                <div id="eventList" class="flex-1 overflow-y-auto pr-2 space-y-2">
+                    <!-- Events will be rendered here -->
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Student Selection Modal -->
+    <div id="studentModal" class="fixed inset-0 bg-black/50 z-50 hidden flex justify-center items-center backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl animate-[fadeIn_0.2s_ease-out]">
+            <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-2xl">
+                <h3 class="text-lg font-bold text-gray-800">選擇學生 <span id="modalContextInfo" class="text-sm font-normal text-gray-500 ml-2"></span></h3>
+                <button onclick="closeStudentModal()" class="text-gray-400 hover:text-gray-700 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="p-3 border-b flex gap-2 bg-white">
+                <button onclick="selectAllStudents()" class="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg font-semibold text-gray-700">全選</button>
+                <button onclick="clearAllStudents()" class="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg font-semibold text-gray-700">全不選</button>
+            </div>
+
+            <!-- Student Grid -->
+            <div id="modalStudentGrid" class="p-4 flex-1 overflow-y-auto grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 bg-gray-50/50">
+                <!-- Populated via JS -->
+            </div>
+
+            <div class="p-4 border-t flex justify-end gap-3 bg-white rounded-b-2xl">
+                <button onclick="closeStudentModal()" class="px-5 py-2 rounded-xl text-gray-600 font-bold hover:bg-gray-100 transition-colors">取消</button>
+                <button onclick="confirmStudentSelection()" class="px-5 py-2 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-colors shadow-md">確認名單</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- State Management ---
+        let classesData = { classes: [], activeClassId: null };
+        // Structure: { classId: { date_YYYY_MM_DD: { tasks:[], hw:[], perf:[] }, events:[] } }
+        let assistantData = {}; 
+        
+        let currentDate = new Date().toLocaleDateString('en-CA'); // Gets YYYY-MM-DD
+        let currentClassId = null;
+        
+        // Modal State
+        let currentModalContext = null; // 'hw' or 'perf'
+        let selectedStudentsTmp = new Set();
+        let pendingSelections = {
+            hw: [],
+            perf: []
+        };
+
+        // --- Initialization ---
+        function init() {
+            // Load Class Data
+            const storedClasses = localStorage.getItem('gachaClassesData');
+            if (storedClasses) {
+                try {
+                    classesData = JSON.parse(storedClasses);
+                } catch(e) { console.error("Error parsing classes data", e); }
+            }
+            
+            // Generate default class if none
+            if (classesData.classes.length === 0) {
+                classesData.classes.push({
+                    id: 'default',
+                    name: '預設班級',
+                    participants: Array.from({length: 30}, (_, i) => ({ id: `s${i+1}`, name: `${i+1}號`, active: true }))
+                });
+                classesData.activeClassId = 'default';
+            }
+            
+            currentClassId = classesData.activeClassId || classesData.classes[0].id;
+            
+            // Load Assistant Data
+            const storedAssistant = localStorage.getItem('classAssistantData');
+            if (storedAssistant) {
+                try {
+                    assistantData = JSON.parse(storedAssistant);
+                } catch(e) {}
+            }
+
+            // Ensure current class structure exists
+            if (!assistantData[currentClassId]) {
+                assistantData[currentClassId] = { events: [] };
+            }
+
+            // Setup UI
+            setupClassSelector();
+            document.getElementById('dateSelector').value = currentDate;
+            document.getElementById('eventDate').value = currentDate;
+            
+            // Event Listeners
+            document.getElementById('dateSelector').addEventListener('change', (e) => {
+                currentDate = e.target.value;
+                renderAll();
+            });
+            document.getElementById('classSelector').addEventListener('change', (e) => {
+                currentClassId = e.target.value;
+                renderAll();
+            });
+
+            // Enter key bindings
+            document.getElementById('taskContent').addEventListener('keypress', e => e.key === 'Enter' && addTask());
+            document.getElementById('hwContent').addEventListener('keypress', e => e.key === 'Enter' && document.querySelector(`button[onclick="openStudentModal('hw')"]`).click());
+            document.getElementById('perfContent').addEventListener('keypress', e => e.key === 'Enter' && document.querySelector(`button[onclick="openStudentModal('perf')"]`).click());
+            document.getElementById('eventContent').addEventListener('keypress', e => e.key === 'Enter' && addEvent());
+
+            renderAll();
+        }
+
+        function saveData() {
+            localStorage.setItem('classAssistantData', JSON.stringify(assistantData));
+        }
+
+        function getDailyData() {
+            if (!assistantData[currentClassId]) assistantData[currentClassId] = { events: [] };
+            if (!assistantData[currentClassId][currentDate]) {
+                assistantData[currentClassId][currentDate] = { tasks: [], hw: [], perf: [] };
+            }
+            return assistantData[currentClassId][currentDate];
+        }
+
+        function setupClassSelector() {
+            const sel = document.getElementById('classSelector');
+            sel.innerHTML = '';
+            classesData.classes.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.name;
+                if (c.id === currentClassId) opt.selected = true;
+                sel.appendChild(opt);
+            });
+        }
+
+        // --- Modal Logic ---
+        function openStudentModal(context) {
+            // Check if content is entered
+            const inputId = context === 'hw' ? 'hwContent' : 'perfContent';
+            const content = document.getElementById(inputId).value.trim();
+            if (!content) {
+                Swal.fire({ icon: 'warning', title: '請先輸入事項名稱！', timer: 1500, showConfirmButton: false });
+                document.getElementById(inputId).focus();
+                return;
+            }
+
+            currentModalContext = context;
+            const cls = classesData.classes.find(c => c.id === currentClassId);
+            
+            // Populate grid
+            const grid = document.getElementById('modalStudentGrid');
+            grid.innerHTML = '';
+            
+            // Use existing pending selection or empty
+            selectedStudentsTmp = new Set(pendingSelections[context].map(s => s.id));
+
+            cls.participants.forEach(p => {
+                const btn = document.createElement('div');
+                const isSelected = selectedStudentsTmp.has(p.id);
+                btn.className = `cursor-pointer p-2 rounded-xl text-center border-2 transition-all font-bold ${isSelected ? 'bg-indigo-100 border-indigo-500 text-indigo-700' : 'bg-white border-gray-200 text-gray-600 hover:border-indigo-300'}`;
+                btn.textContent = p.name;
+                btn.onclick = () => toggleStudentSelection(p.id, p.name, btn);
+                grid.appendChild(btn);
+            });
+
+            document.getElementById('modalContextInfo').textContent = `- ${content}`;
+            document.getElementById('studentModal').classList.remove('hidden');
+        }
+
+        function closeStudentModal() {
+            document.getElementById('studentModal').classList.add('hidden');
+        }
+
+        function toggleStudentSelection(id, name, element) {
+            if (selectedStudentsTmp.has(id)) {
+                selectedStudentsTmp.delete(id);
+                element.className = 'cursor-pointer p-2 rounded-xl text-center border-2 transition-all font-bold bg-white border-gray-200 text-gray-600 hover:border-indigo-300';
+            } else {
+                selectedStudentsTmp.add(id);
+                element.className = 'cursor-pointer p-2 rounded-xl text-center border-2 transition-all font-bold bg-indigo-100 border-indigo-500 text-indigo-700';
+            }
+        }
+
+        function selectAllStudents() {
+            const cls = classesData.classes.find(c => c.id === currentClassId);
+            cls.participants.forEach(p => selectedStudentsTmp.add(p.id));
+            refreshModalGridUI();
+        }
+
+        function clearAllStudents() {
+            selectedStudentsTmp.clear();
+            refreshModalGridUI();
+        }
+
+        function refreshModalGridUI() {
+            const grid = document.getElementById('modalStudentGrid');
+            const cls = classesData.classes.find(c => c.id === currentClassId);
+            Array.from(grid.children).forEach((btn, idx) => {
+                const p = cls.participants[idx];
+                if (selectedStudentsTmp.has(p.id)) {
+                    btn.className = 'cursor-pointer p-2 rounded-xl text-center border-2 transition-all font-bold bg-indigo-100 border-indigo-500 text-indigo-700';
+                } else {
+                    btn.className = 'cursor-pointer p-2 rounded-xl text-center border-2 transition-all font-bold bg-white border-gray-200 text-gray-600 hover:border-indigo-300';
+                }
+            });
+        }
+
+        function confirmStudentSelection() {
+            const cls = classesData.classes.find(c => c.id === currentClassId);
+            const selectedArr = cls.participants.filter(p => selectedStudentsTmp.has(p.id)).map(p => ({id: p.id, name: p.name}));
+            
+            pendingSelections[currentModalContext] = selectedArr;
+            
+            // Update preview UI
+            const previewContainer = document.getElementById(`${currentModalContext}PendingStudents`);
+            const previewList = document.getElementById(`${currentModalContext}PendingList`);
+            const addBtn = document.getElementById(`${currentModalContext}AddBtn`);
+            
+            if (selectedArr.length > 0) {
+                previewContainer.classList.remove('hidden');
+                addBtn.classList.remove('hidden');
+                previewList.innerHTML = '';
+                selectedArr.forEach(s => {
+                    const pill = document.createElement('span');
+                    pill.className = 'student-pill';
+                    pill.textContent = s.name;
+                    previewList.appendChild(pill);
+                });
+            } else {
+                previewContainer.classList.add('hidden');
+                addBtn.classList.add('hidden');
+            }
+            
+            closeStudentModal();
+        }
+
+        // --- Data Operations & Rendering ---
+        function uuid() { return Math.random().toString(36).substr(2, 9); }
+
+        function renderAll() {
+            renderTasks();
+            renderHW();
+            renderPerf();
+            renderEvents();
+            
+            // Reset pendings
+            ['hw', 'perf'].forEach(ctx => {
+                pendingSelections[ctx] = [];
+                document.getElementById(`${ctx}PendingStudents`).classList.add('hidden');
+                document.getElementById(`${ctx}AddBtn`).classList.add('hidden');
+                document.getElementById(`${ctx}Content`).value = '';
+            });
+        }
+
+        // Tasks
+        function addTask() {
+            const input = document.getElementById('taskContent');
+            const type = document.getElementById('taskType').value;
+            const text = input.value.trim();
+            if (!text) return;
+            
+            const data = getDailyData();
+            data.tasks.push({ id: uuid(), type, text, done: false });
+            saveData();
+            input.value = '';
+            renderTasks();
+        }
+
+        function renderTasks() {
+            const list = document.getElementById('taskList');
+            list.innerHTML = '';
+            const tasks = getDailyData().tasks || [];
+            
+            const typeColors = {
+                '聯絡本': 'bg-blue-100 text-blue-700',
+                '本日任務': 'bg-amber-100 text-amber-700',
+                '這節任務': 'bg-rose-100 text-rose-700',
+                '自訂說明': 'bg-gray-200 text-gray-700'
+            };
+
+            tasks.forEach(t => {
+                const el = document.createElement('div');
+                el.className = `flex items-start gap-3 p-3 rounded-xl border ${t.done ? 'bg-gray-50 opacity-60' : 'bg-white shadow-sm'}`;
+                
+                el.innerHTML = `
+                    <input type="checkbox" class="checkbox-custom mt-0.5" ${t.done ? 'checked' : ''} onchange="toggleTask('${t.id}')">
+                    <div class="flex-1">
+                        <span class="text-[0.65rem] font-bold px-2 py-0.5 rounded-md ${typeColors[t.type] || 'bg-gray-100'}">${t.type}</span>
+                        <p class="text-sm font-semibold mt-1 ${t.done ? 'line-through text-gray-500' : 'text-gray-800'}">${t.text}</p>
+                    </div>
+                    <i class="fa-solid fa-trash btn-delete mt-1" onclick="deleteTask('${t.id}')"></i>
+                `;
+                list.appendChild(el);
+            });
+        }
+
+        function toggleTask(id) {
+            const data = getDailyData();
+            const t = data.tasks.find(x => x.id === id);
+            if(t) {
+                t.done = !t.done;
+                saveData();
+                renderTasks();
+            }
+        }
+        function deleteTask(id) {
+            const data = getDailyData();
+            data.tasks = data.tasks.filter(x => x.id !== id);
+            saveData();
+            renderTasks();
+        }
+
+        // Homework
+        function addHomework() {
+            const input = document.getElementById('hwContent');
+            const category = document.getElementById('hwCategory').value;
+            const text = input.value.trim();
+            const students = pendingSelections.hw;
+            if (!text || students.length === 0) return;
+            
+            const data = getDailyData();
+            data.hw.push({ id: uuid(), category, text, students: JSON.parse(JSON.stringify(students)) });
+            saveData();
+            
+            input.value = '';
+            pendingSelections.hw = [];
+            document.getElementById('hwPendingStudents').classList.add('hidden');
+            document.getElementById('hwAddBtn').classList.add('hidden');
+            renderHW();
+        }
+
+        function renderHW() {
+            const list = document.getElementById('hwList');
+            list.innerHTML = '';
+            const hws = getDailyData().hw || [];
+
+            hws.forEach(h => {
+                const el = document.createElement('div');
+                el.className = `flex flex-col gap-2 p-3 rounded-xl border bg-white shadow-sm`;
+                
+                let studentsHtml = h.students.map(s => `<span class="student-pill">${s.name}</span>`).join('');
+
+                el.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold px-2 py-1 rounded border border-rose-200 text-rose-600 bg-rose-50">${h.category}</span>
+                            <span class="text-sm font-bold text-gray-800">${h.text}</span>
+                        </div>
+                        <i class="fa-solid fa-trash btn-delete" onclick="deleteHW('${h.id}')"></i>
+                    </div>
+                    <div class="flex flex-wrap gap-1 mt-1 pl-1">
+                        ${studentsHtml}
+                    </div>
+                `;
+                list.appendChild(el);
+            });
+        }
+
+        function deleteHW(id) {
+            const data = getDailyData();
+            data.hw = data.hw.filter(x => x.id !== id);
+            saveData();
+            renderHW();
+        }
+
+        // Performance
+        function updatePerfColor(selectEl) {
+            const color = selectEl.options[selectEl.selectedIndex].dataset.color;
+            selectEl.className = `p-2 border rounded-lg bg-gray-50 text-sm font-semibold w-28 shrink-0 ${color}`;
+        }
+
+        function addPerformance() {
+            const input = document.getElementById('perfContent');
+            const category = document.getElementById('perfCategory').value;
+            const text = input.value.trim();
+            const students = pendingSelections.perf;
+            if (!text || students.length === 0) return;
+            
+            const data = getDailyData();
+            data.perf.push({ id: uuid(), category, text, students: JSON.parse(JSON.stringify(students)) });
+            saveData();
+            
+            input.value = '';
+            pendingSelections.perf = [];
+            document.getElementById('perfPendingStudents').classList.add('hidden');
+            document.getElementById('perfAddBtn').classList.add('hidden');
+            renderPerf();
+        }
+
+        function renderPerf() {
+            const list = document.getElementById('perfList');
+            list.innerHTML = '';
+            const perfs = getDailyData().perf || [];
+
+            perfs.forEach(p => {
+                const el = document.createElement('div');
+                el.className = `flex flex-col gap-2 p-3 rounded-xl border bg-white shadow-sm`;
+                
+                let studentsHtml = p.students.map(s => `<span class="student-pill">${s.name}</span>`).join('');
+                const catStyle = p.category === '一級棒' 
+                    ? 'border-emerald-200 text-emerald-600 bg-emerald-50' 
+                    : 'border-rose-200 text-rose-600 bg-rose-50';
+
+                el.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold px-2 py-1 rounded border ${catStyle}">${p.category}</span>
+                            <span class="text-sm font-bold text-gray-800">${p.text}</span>
+                        </div>
+                        <i class="fa-solid fa-trash btn-delete" onclick="deletePerf('${p.id}')"></i>
+                    </div>
+                    <div class="flex flex-wrap gap-1 mt-1 pl-1">
+                        ${studentsHtml}
+                    </div>
+                `;
+                list.appendChild(el);
+            });
+        }
+        function deletePerf(id) {
+            const data = getDailyData();
+            data.perf = data.perf.filter(x => x.id !== id);
+            saveData();
+            renderPerf();
+        }
+
+        // Events
+        function addEvent() {
+            const dateInput = document.getElementById('eventDate');
+            const textInput = document.getElementById('eventContent');
+            const date = dateInput.value;
+            const text = textInput.value.trim();
+            if(!text || !date) return;
+
+            if(!assistantData[currentClassId]) assistantData[currentClassId] = { events: [] };
+            if(!assistantData[currentClassId].events) assistantData[currentClassId].events = [];
+            
+            assistantData[currentClassId].events.push({ id: uuid(), date, text });
+            saveData();
+            textInput.value = '';
+            renderEvents();
+        }
+
+        function renderEvents() {
+            const list = document.getElementById('eventList');
+            list.innerHTML = '';
+            if(!assistantData[currentClassId]) return;
+            const events = assistantData[currentClassId].events || [];
+            
+            // Sort by date ascending
+            const sortedEvents = [...events].sort((a,b) => new Date(a.date) - new Date(b.date));
+
+            // Set today at 00:00:00 to compare
+            const today = new Date();
+            today.setHours(0,0,0,0);
+
+            sortedEvents.forEach(e => {
+                const eDate = new Date(e.date);
+                eDate.setHours(0,0,0,0);
+                
+                const isPast = eDate < today;
+                
+                const el = document.createElement('div');
+                el.className = `flex justify-between items-center p-3 rounded-xl border ${isPast ? 'bg-gray-100 opacity-60' : 'bg-gradient-to-r from-cyan-50 to-white shadow-sm border-cyan-100'}`;
+                
+                // Format date MM/DD
+                const displayDate = `${eDate.getMonth()+1}/${eDate.getDate()}`;
+                const diffDays = Math.ceil((eDate - today) / (1000 * 60 * 60 * 24));
+                let badge = '';
+                if(diffDays === 0) badge = '<span class="text-[0.6rem] bg-rose-500 text-white px-1.5 py-0.5 rounded ml-2">今天</span>';
+                else if(diffDays > 0 && diffDays <= 7) badge = `<span class="text-[0.6rem] bg-amber-500 text-white px-1.5 py-0.5 rounded ml-2">剩 ${diffDays} 天</span>`;
+
+                el.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="flex flex-col items-center justify-center bg-white border-2 border-cyan-200 rounded-lg w-12 h-12 shrink-0">
+                            <span class="text-[0.65rem] font-bold text-cyan-600 uppercase leading-none">${eDate.toLocaleString('en-US', {month:'short'})}</span>
+                            <span class="text-lg font-black text-gray-800 leading-none mt-0.5">${eDate.getDate()}</span>
+                        </div>
+                        <p class="text-sm font-bold text-gray-800">${e.text} ${badge}</p>
+                    </div>
+                    <i class="fa-solid fa-trash btn-delete" onclick="deleteEvent('${e.id}')"></i>
+                `;
+                list.appendChild(el);
+            });
+        }
+        function deleteEvent(id) {
+            assistantData[currentClassId].events = assistantData[currentClassId].events.filter(x => x.id !== id);
+            saveData();
+            renderEvents();
+        }
+
+        // Boot
+        init();
+    </script>
+    <!-- Back to Home Hover Button -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            if (window.self === window.top) {
+                const backBtn = document.createElement("a");
+                backBtn.href = "index.html";
+                backBtn.className = "back-to-home-btn";
+                backBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:20px;height:20px;min-width:20px;margin:0 11px;"><path d="M11.47 3.84a.75.75 0 011.06 0l8.69 8.69a.75.75 0 101.06-1.06l-8.689-8.69a2.25 2.25 0 00-3.182 0l-8.69 8.69a.75.75 0 001.061 1.06l8.69-8.69z" /><path d="M12 5.432l8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 01-.75-.75v-4.5a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75V21a.75.75 0 01-.75.75H5.625a1.875 1.875 0 01-1.875-1.875v-6.198a2.29 2.29 0 00.091-.086L12 5.432z" /></svg> <span>\u8fd4\u56de\u9996\u9801</span>';
+                
+                const style = document.createElement("style");
+                style.innerHTML = `
+                    .back-to-home-btn {
+                        position: fixed;
+                        top: 15px;
+                        left: 15px;
+                        background: rgba(255, 255, 255, 0.85);
+                        backdrop-filter: blur(8px);
+                        -webkit-backdrop-filter: blur(8px);
+                        color: #4F46E5;
+                        width: 42px;
+                        height: 42px;
+                        border-radius: 21px;
+                        font-size: 0.85rem;
+                        font-weight: 700;
+                        text-decoration: none;
+                        display: flex;
+                        align-items: center;
+                        box-shadow: 0 4px 10px rgba(0,0,0,0.1), inset 0 0 0 1px rgba(79, 70, 229, 0.1);
+                        z-index: 999999;
+                        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                        font-family: 'Inter', 'Nunito', sans-serif;
+                        overflow: hidden;
+                        box-sizing: border-box;
+                        white-space: nowrap;
+                    }
+                    .back-to-home-btn span {
+                        opacity: 0;
+                        transform: translateX(-10px);
+                        transition: all 0.3s ease;
+                    }
+                    .back-to-home-btn:hover {
+                        width: 110px;
+                        background: #4F46E5;
+                        color: white;
+                        box-shadow: 0 6px 15px rgba(79, 70, 229, 0.3);
+                    }
+                    .back-to-home-btn:hover span {
+                        opacity: 1;
+                        transform: translateX(0);
+                        padding-right: 15px;
+                    }
+                `;
+                document.head.appendChild(style);
+                document.body.appendChild(backBtn);
+            }
+        });
+    </script>
+</body>
+</html>
+
