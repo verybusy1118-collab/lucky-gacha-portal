@@ -1247,7 +1247,33 @@
             tbody.innerHTML = '';
             
             const incidents = assistantData[currentClassId].incidents || [];
-            if(incidents.length === 0) {
+            
+            // Collect honors across all dates
+            let allHonors = [];
+            Object.keys(assistantData[currentClassId]).forEach(key => {
+                if (key !== 'events' && key !== 'incidents') { // Date keys
+                    const daily = assistantData[currentClassId][key];
+                    if (daily.honors) {
+                        daily.honors.forEach(h => {
+                            allHonors.push({
+                                id: h.id,
+                                isHonor: true,
+                                date: key,
+                                student: h.studentName,
+                                category: '榮譽加扣分',
+                                text: h.deed,
+                                process: '分數異動: ' + (h.points > 0 ? '+' : '') + h.points,
+                                contact: '',
+                                note: ''
+                            });
+                        });
+                    }
+                }
+            });
+
+            const combined = [...incidents, ...allHonors].sort((a,b) => new Date(b.date) - new Date(a.date));
+
+            if(combined.length === 0) {
                 tbody.parentElement.classList.add('hidden');
                 if(emptyState) emptyState.classList.remove('hidden');
                 return;
@@ -1256,16 +1282,13 @@
                 if(emptyState) emptyState.classList.add('hidden');
             }
             
-            // Sort by date descending
-            const sorted = [...incidents].sort((a,b) => new Date(b.date) - new Date(a.date));
-            
-            sorted.forEach(inc => {
+            combined.forEach(inc => {
                 const tr = document.createElement('tr');
                 tr.className = "border-b hover:bg-rose-50 transition-colors";
                 tr.innerHTML = `
                     <td class="px-4 py-3">${inc.date}</td>
                     <td class="px-4 py-3 font-bold">${inc.student}</td>
-                    <td class="px-4 py-3"><span class="px-2 py-1 bg-rose-100 text-rose-700 rounded-md text-xs font-bold">${inc.category}</span></td>
+                    <td class="px-4 py-3"><span class="px-2 py-1 ${inc.isHonor ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'} rounded-md text-xs font-bold">${inc.category}</span></td>
                     <td class="px-4 py-3 text-sm"><div class="max-w-[150px] truncate" title="${inc.text || ''}">${inc.text || '-'}</div></td>
                     <td class="px-4 py-3 text-sm"><div class="max-w-[200px] truncate" title="${inc.process || ''}">${inc.process || '-'}</div></td>
                     <td class="px-4 py-3 text-sm text-gray-600"><div class="max-w-[150px] truncate" title="${inc.contact || ''}">${inc.contact || '-'}</div></td>
@@ -1281,13 +1304,44 @@
         function deleteIncident(id) {
             Swal.fire({
                 title: '確定刪除此紀錄？',
+                text: id.startsWith('h_') ? '刪除此榮譽紀錄將會把分數扣回/加回！' : '',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#e11d48',
                 confirmButtonText: '刪除'
             }).then((result) => {
                 if(result.isConfirmed) {
-                    assistantData[currentClassId].incidents = assistantData[currentClassId].incidents.filter(x => x.id !== id);
+                    if (id.startsWith('h_')) {
+                        let pointsToUndo = 0;
+                        let studentIdToUndo = '';
+                        Object.keys(assistantData[currentClassId]).forEach(key => {
+                            if (key !== 'events' && key !== 'incidents') {
+                                const daily = assistantData[currentClassId][key];
+                                if (daily.honors) {
+                                    const honorIndex = daily.honors.findIndex(x => x.id === id);
+                                    if(honorIndex !== -1) {
+                                        pointsToUndo = daily.honors[honorIndex].points;
+                                        studentIdToUndo = daily.honors[honorIndex].studentId;
+                                        daily.honors.splice(honorIndex, 1);
+                                    }
+                                }
+                            }
+                        });
+                        
+                        if (studentIdToUndo) {
+                            const cls = getCurrentClass();
+                            const student = cls.participants.find(p => p.id === studentIdToUndo);
+                            if (student) {
+                                student.points = (student.points || 0) - pointsToUndo;
+                                saveClassesData();
+                                if (!document.getElementById('leaderboardPanel').classList.contains('hidden')) {
+                                    if (typeof renderLeaderboard === 'function') renderLeaderboard();
+                                }
+                            }
+                        }
+                    } else {
+                        assistantData[currentClassId].incidents = assistantData[currentClassId].incidents.filter(x => x.id !== id);
+                    }
                     saveData();
                     renderIncidentLogs();
                 }
@@ -1351,7 +1405,32 @@
 
         function exportIncidentsCSV() {
             const incidents = assistantData[currentClassId].incidents || [];
-            if(incidents.length === 0) {
+            
+            // Collect honors across all dates
+            let allHonors = [];
+            Object.keys(assistantData[currentClassId]).forEach(key => {
+                if (key !== 'events' && key !== 'incidents') {
+                    const daily = assistantData[currentClassId][key];
+                    if (daily.honors) {
+                        daily.honors.forEach(h => {
+                            allHonors.push({
+                                id: h.id,
+                                date: key,
+                                student: h.studentName,
+                                category: '榮譽加扣分',
+                                text: h.deed,
+                                process: '分數異動: ' + (h.points > 0 ? '+' : '') + h.points,
+                                contact: '',
+                                note: ''
+                            });
+                        });
+                    }
+                }
+            });
+
+            const combined = [...incidents, ...allHonors].sort((a,b) => new Date(b.date) - new Date(a.date));
+
+            if(combined.length === 0) {
                 Swal.fire({ icon: 'warning', title: '目前沒有紀錄可匯出', timer: 1500, showConfirmButton: false });
                 return;
             }
@@ -1359,8 +1438,7 @@
             // BOM for Excel UTF-8 recognition
             let csvContent = "\uFEFF日期,學生姓名,事件分類,具體事項,處理過程,家長/行政聯繫,其它補充\n";
             
-            const sorted = [...incidents].sort((a,b) => new Date(b.date) - new Date(a.date));
-            sorted.forEach(inc => {
+            combined.forEach(inc => {
                 const escapeCSV = (str) => {
                     if (!str) return '""';
                     return '"' + str.replace(/"/g, '""').replace(/\n/g, ' ') + '"';
