@@ -1082,14 +1082,19 @@
         }
 
         function renderIncidentLogs() {
-            const tbody = document.getElementById('incidentLogsTableBody');
+            const tbody = document.getElementById('incidentLogTable');
+            const emptyState = document.getElementById('incidentLogEmpty');
             if(!tbody) return;
             tbody.innerHTML = '';
             
             const incidents = assistantData[currentClassId].incidents || [];
             if(incidents.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">目前尚無任何異常事件紀錄</td></tr>';
+                tbody.parentElement.classList.add('hidden');
+                if(emptyState) emptyState.classList.remove('hidden');
                 return;
+            } else {
+                tbody.parentElement.classList.remove('hidden');
+                if(emptyState) emptyState.classList.add('hidden');
             }
             
             // Sort by date descending
@@ -1101,9 +1106,11 @@
                 tr.innerHTML = `
                     <td class="px-4 py-3">${inc.date}</td>
                     <td class="px-4 py-3 font-bold">${inc.student}</td>
-                    <td class="px-4 py-3"><span class="px-2 py-1 bg-rose-100 text-rose-700 rounded-md text-xs font-bold">${inc.category}</span><br><span class="text-xs text-gray-500 mt-1 block">${inc.text || '-'}</span></td>
-                    <td class="px-4 py-3 text-sm">${inc.process}</td>
-                    <td class="px-4 py-3 text-sm text-gray-600">${inc.contact || '-'}</td>
+                    <td class="px-4 py-3"><span class="px-2 py-1 bg-rose-100 text-rose-700 rounded-md text-xs font-bold">${inc.category}</span></td>
+                    <td class="px-4 py-3 text-sm"><div class="max-w-[150px] truncate" title="${inc.text || ''}">${inc.text || '-'}</div></td>
+                    <td class="px-4 py-3 text-sm"><div class="max-w-[200px] truncate" title="${inc.process || ''}">${inc.process || '-'}</div></td>
+                    <td class="px-4 py-3 text-sm text-gray-600"><div class="max-w-[150px] truncate" title="${inc.contact || ''}">${inc.contact || '-'}</div></td>
+                    <td class="px-4 py-3 text-sm text-gray-600"><div class="max-w-[150px] truncate" title="${inc.note || ''}">${inc.note || '-'}</div></td>
                     <td class="px-4 py-3 text-center">
                         <button onclick="deleteIncident('${inc.id}')" class="text-gray-400 hover:text-rose-500"><i class="fa-solid fa-trash"></i></button>
                     </td>
