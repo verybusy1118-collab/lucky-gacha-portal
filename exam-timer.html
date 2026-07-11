@@ -7,6 +7,16 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        @font-face {
+            font-family: 'BpmfGenSenRounded-R';
+            src: url('https://cdn.jsdelivr.net/gh/tadlearn/webfonts/BpmfGenSenRounded-R.woff2') format('woff2');
+            font-display: swap;
+        }
+        .font-bopomofo {
+            font-family: 'BpmfGenSenRounded-R', 'PingFang TC', 'Microsoft JhengHei', sans-serif !important;
+            line-height: 1.5 !important;
+        }
+        
         body {
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
             background-color: #ffffff;
@@ -21,7 +31,7 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 
         .clock-font {
-            font-family: 'Courier New', Courier, monospace;
+            font-family: 'Courier New', Courier, monospace !important;
             font-weight: bold;
         }
 
@@ -253,6 +263,15 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- 注音字型設定 -->
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+                            <h3 class="text-lg font-bold text-gray-800 mb-3 border-b pb-2"><i class="fa-solid fa-language text-purple-500"></i> 注音顯示設定</h3>
+                            <div class="flex items-center gap-3">
+                                <input type="checkbox" id="setting-bopomofo" class="w-6 h-6 cursor-pointer">
+                                <label for="setting-bopomofo" class="font-bold text-gray-700 cursor-pointer text-lg">啟用加註注音版本 (適合低年級)</label>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -294,7 +313,8 @@
             ],
             expected: 30,
             actual: 30,
-            notes: "請將手機關機並收到書包內\n作答完畢請安靜檢查\n鐘聲響畢請立刻停筆"
+            notes: "請將手機關機並收到書包內\n作答完畢請安靜檢查\n鐘聲響畢請立刻停筆",
+            enableBopomofo: false
         };
 
         let editingSchedule = [];
@@ -367,6 +387,12 @@
         }
 
         function updateDisplayFromData() {
+            if (examData.enableBopomofo) {
+                document.body.classList.add('font-bopomofo');
+            } else {
+                document.body.classList.remove('font-bopomofo');
+            }
+
             const scheduleContainer = document.getElementById('schedule-container');
             scheduleContainer.innerHTML = '';
             
@@ -578,6 +604,7 @@
             document.getElementById('setting-expected').value = examData.expected;
             document.getElementById('setting-actual').value = examData.actual;
             document.getElementById('setting-notes').value = examData.notes;
+            document.getElementById('setting-bopomofo').checked = examData.enableBopomofo || false;
             
             document.getElementById('settings-modal').classList.remove('hidden');
         }
@@ -625,6 +652,7 @@
             examData.expected = document.getElementById('setting-expected').value;
             examData.actual = document.getElementById('setting-actual').value;
             examData.notes = document.getElementById('setting-notes').value;
+            examData.enableBopomofo = document.getElementById('setting-bopomofo').checked;
 
             localStorage.setItem('examRemindersDataAdvanced5', JSON.stringify(examData));
 
