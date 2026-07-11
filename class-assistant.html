@@ -106,12 +106,13 @@
                     <i class="fa-solid fa-check-square"></i> 任務與提醒
                 </h2>
                 <div class="flex gap-2 mb-4">
-                    <select id="taskType" class="p-2 border rounded-lg bg-gray-50 text-sm font-semibold shrink-0">
-                        <option value="聯絡本">聯絡本</option>
-                        <option value="本日任務">本日任務</option>
-                        <option value="這節任務">這節任務</option>
-                        <option value="自訂說明">自訂說明</option>
-                    </select>
+                    <input type="text" id="taskType" list="taskTypeOptions" placeholder="分類 (例:聯絡本)" value="聯絡本" class="p-2 border rounded-lg bg-gray-50 text-sm font-semibold w-28 shrink-0 focus:outline-indigo-300">
+                    <datalist id="taskTypeOptions">
+                        <option value="聯絡本">
+                        <option value="本日任務">
+                        <option value="這節任務">
+                        <option value="自訂說明">
+                    </datalist>
                     <input type="text" id="taskContent" placeholder="輸入事項..." class="flex-1 p-2 border rounded-lg text-sm focus:outline-indigo-300">
                     <button onclick="addTask()" class="btn-add w-10 rounded-lg flex justify-center items-center shrink-0"><i class="fa-solid fa-plus"></i></button>
                 </div>
@@ -194,12 +195,6 @@
                 <h3 class="text-lg font-bold text-gray-800">選擇學生 <span id="modalContextInfo" class="text-sm font-normal text-gray-500 ml-2"></span></h3>
                 <button onclick="closeStudentModal()" class="text-gray-400 hover:text-gray-700 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-            
-            <!-- Quick Actions -->
-            <div class="p-3 border-b flex gap-2 bg-white">
-                <button onclick="selectAllStudents()" class="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg font-semibold text-gray-700">全選</button>
-                <button onclick="clearAllStudents()" class="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg font-semibold text-gray-700">全不選</button>
-            </div>
 
             <!-- Student Grid -->
             <div id="modalStudentGrid" class="p-4 flex-1 overflow-y-auto grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 bg-gray-50/50">
@@ -208,7 +203,7 @@
 
             <div class="p-4 border-t flex justify-end gap-3 bg-white rounded-b-2xl">
                 <button onclick="closeStudentModal()" class="px-5 py-2 rounded-xl text-gray-600 font-bold hover:bg-gray-100 transition-colors">取消</button>
-                <button onclick="confirmStudentSelection()" class="px-5 py-2 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-colors shadow-md">確認名單</button>
+                <button onclick="confirmStudentSelection()" class="px-5 py-2 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-colors shadow-md">確認送出紀錄</button>
             </div>
         </div>
     </div>
@@ -361,42 +356,34 @@
             }
         }
 
-        function selectAllStudents() {
-            const cls = classesData.classes.find(c => c.id === currentClassId);
-            cls.participants.forEach(p => selectedStudentsTmp.add(p.id));
-            refreshModalGridUI();
+        function toggleStudentSelection(id, name, element) {
+            if (selectedStudentsTmp.has(id)) {
+                selectedStudentsTmp.delete(id);
+                element.className = 'cursor-pointer p-2 rounded-xl text-center border-2 transition-all font-bold bg-white border-gray-200 text-gray-600 hover:border-indigo-300';
+            } else {
+                selectedStudentsTmp.add(id);
+                element.className = 'cursor-pointer p-2 rounded-xl text-center border-2 transition-all font-bold bg-indigo-100 border-indigo-500 text-indigo-700';
+            }
         }
 
-        function clearAllStudents() {
-            selectedStudentsTmp.clear();
-            refreshModalGridUI();
-        }
 
-        function refreshModalGridUI() {
-            const grid = document.getElementById('modalStudentGrid');
-            const cls = classesData.classes.find(c => c.id === currentClassId);
-            Array.from(grid.children).forEach((btn, idx) => {
-                const p = cls.participants[idx];
-                if (selectedStudentsTmp.has(p.id)) {
-                    btn.className = 'cursor-pointer p-2 rounded-xl text-center border-2 transition-all font-bold bg-indigo-100 border-indigo-500 text-indigo-700';
-                } else {
-                    btn.className = 'cursor-pointer p-2 rounded-xl text-center border-2 transition-all font-bold bg-white border-gray-200 text-gray-600 hover:border-indigo-300';
-                }
-            });
-        }
 
         function confirmStudentSelection() {
             const cls = classesData.classes.find(c => c.id === currentClassId);
             const selectedArr = cls.participants.filter(p => selectedStudentsTmp.has(p.id)).map(p => ({id: p.id, name: p.name}));
             
+            if (selectedArr.length === 0) {
+                closeStudentModal();
+                return;
+            }
+            
             pendingSelections[currentModalContext] = selectedArr;
+            selectedStudentsTmp.clear(); // Reset immediately
             
             closeStudentModal();
             
-            if (selectedArr.length > 0) {
-                if (currentModalContext === 'hw') addHomework();
-                else if (currentModalContext === 'perf') addPerformance();
-            }
+            if (currentModalContext === 'hw') addHomework();
+            else if (currentModalContext === 'perf') addPerformance();
         }
 
         // --- Data Operations & Rendering ---
