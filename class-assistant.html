@@ -204,6 +204,22 @@
             </h2>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- 資料備份與還原 -->
+                <section class="card p-5 col-span-1 md:col-span-3">
+                    <h3 class="text-lg font-bold text-teal-600 mb-4 border-b pb-2 flex items-center gap-2"><i class="fa-solid fa-floppy-disk"></i> 資料備份與還原</h3>
+                    <div class="bg-teal-50 rounded-xl p-5 border border-teal-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div>
+                            <h4 class="font-bold text-teal-800">下載與還原備份檔</h4>
+                            <p class="text-sm text-teal-600 mt-1">您可以將所有班級與紀錄資料下載為 JSON 檔案，儲存在您的電腦中，確保資料不會遺失。日後換電腦時也能重新匯入。</p>
+                        </div>
+                        <div class="flex gap-2 shrink-0">
+                            <button onclick="exportData()" class="px-4 py-2 bg-teal-600 text-white rounded-lg font-bold hover:bg-teal-700 transition-colors shadow-sm"><i class="fa-solid fa-download mr-1"></i> 匯出備份</button>
+                            <button onclick="document.getElementById('importDataInput').click()" class="px-4 py-2 bg-white text-teal-700 border border-teal-200 rounded-lg font-bold hover:bg-teal-50 transition-colors shadow-sm"><i class="fa-solid fa-upload mr-1"></i> 匯入備份</button>
+                            <input type="file" id="importDataInput" class="hidden" accept=".json" onchange="importData(event)">
+                        </div>
+                    </div>
+                </section>
+
                 <!-- 自訂選單管理 -->
                 <section class="card p-5 col-span-1 md:col-span-3">
                     <h3 class="text-lg font-bold text-indigo-600 mb-4 border-b pb-2"><i class="fa-solid fa-tags"></i> 自訂下拉選單管理</h3>
@@ -1132,6 +1148,61 @@
                     saveData();
                     renderIncidentLogs();
                 }
+            });
+        }
+
+        // --- Data Backup & Restore ---
+        function exportData() {
+            const dataToExport = {
+                classesData: classesData,
+                assistantData: assistantData
+            };
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataToExport));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href",     dataStr);
+            const dateStr = new Date().toISOString().split('T')[0];
+            downloadAnchorNode.setAttribute("download", `class-assistant-backup-${dateStr}.json`);
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+            
+            Swal.fire({ icon: 'success', title: '匯出成功！', text: '備份檔案已下載至您的電腦', timer: 2000, showConfirmButton: false });
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            Swal.fire({
+                title: '確定要匯入資料嗎？',
+                text: '匯入將會完全覆蓋您目前所有的班級與紀錄資料，此動作無法復原！',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e11d48',
+                confirmButtonText: '確定覆蓋並匯入',
+                cancelButtonText: '取消'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            const importedData = JSON.parse(e.target.result);
+                            if (importedData.classesData && importedData.assistantData) {
+                                localStorage.setItem('classAssistantClasses', JSON.stringify(importedData.classesData));
+                                localStorage.setItem('classAssistantData', JSON.stringify(importedData.assistantData));
+                                Swal.fire({ icon: 'success', title: '匯入成功！', text: '系統將重新載入以套用資料', timer: 2000, showConfirmButton: false }).then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire({ icon: 'error', title: '匯入失敗', text: '備份檔案格式不正確！' });
+                            }
+                        } catch (err) {
+                            Swal.fire({ icon: 'error', title: '匯入失敗', text: '檔案無法解析！' });
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+                event.target.value = ''; // Reset input
             });
         }
 
