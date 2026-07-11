@@ -110,7 +110,7 @@
     <main class="flex-grow grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch min-h-0">
         
         <!-- 左側：時間資訊 -->
-        <div class="flex flex-col border-4 border-black rounded-3xl p-4 md:p-8 bg-gray-50 overflow-y-auto relative">
+        <div class="flex flex-col border-4 border-black rounded-3xl p-4 md:p-8 bg-gray-50 overflow-hidden relative">
             
             <div class="my-auto w-full flex flex-col items-center space-y-4 md:space-y-6">
                 <div class="text-center mb-2">
@@ -130,20 +130,20 @@
                 <div class="text-center flex-col items-center w-full">
                     <h2 class="text-2xl md:text-3xl font-bold text-gray-700 mb-2">距離考試結束剩餘</h2>
                     <div id="remaining-time" class="text-7xl md:text-9xl clock-font tracking-tighter time-display color-normal leading-none mb-2 md:mb-4">--:--</div>
-                    
-                    <!-- 大字幕提醒外層：預留高度避免排版跳動 -->
-                    <div class="h-10 md:h-16 flex items-center justify-center w-full">
-                        <div id="large-reminder" class="text-3xl md:text-5xl font-extrabold text-red-600 bounce-animation hidden text-center">
-                            <i class="fa-solid fa-triangle-exclamation"></i> <span id="reminder-text"></span>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
 
         <!-- 右側：人數與注意事項 -->
-        <div class="flex flex-col space-y-6 min-h-0">
+        <div class="flex flex-col space-y-4 md:space-y-6 min-h-0">
             
+            <!-- 大字幕提醒 (移至日期上方) -->
+            <div id="large-reminder-container" class="w-full flex items-center justify-center flex-shrink-0 hidden">
+                <div id="large-reminder" class="text-4xl md:text-6xl font-extrabold text-red-600 bounce-animation text-center w-full bg-red-50 border-4 border-red-500 rounded-3xl p-3 md:p-5 shadow-lg">
+                    <i class="fa-solid fa-triangle-exclamation"></i> <span id="reminder-text"></span>
+                </div>
+            </div>
+
             <!-- 顯示日期 -->
             <div id="display-date" class="text-3xl font-bold text-gray-700 bg-gray-50 border-4 border-black rounded-3xl p-4 text-center hidden flex-shrink-0 tracking-wider"></div>
 
@@ -164,7 +164,7 @@
             </div>
 
             <!-- 注意事項 -->
-            <div class="flex-grow border-4 border-black rounded-3xl p-6 bg-white overflow-y-auto">
+            <div class="flex-grow border-4 border-black rounded-3xl p-6 bg-white overflow-hidden flex flex-col">
                 <h2 class="text-3xl font-bold border-b-4 border-black pb-4 mb-5 flex items-center gap-3">
                     <i class="fa-solid fa-bullhorn text-yellow-500"></i> 考試注意事項
                 </h2>
@@ -566,9 +566,9 @@
 
             if (activeReminderText) {
                 document.getElementById('reminder-text').textContent = activeReminderText;
-                reminderEl.classList.remove('hidden');
+                document.getElementById('large-reminder-container').classList.remove('hidden');
             } else {
-                reminderEl.classList.add('hidden');
+                document.getElementById('large-reminder-container').classList.add('hidden');
             }
 
             const stage3Ms = (examData.stages.stage3 || 1) * 60 * 1000;
