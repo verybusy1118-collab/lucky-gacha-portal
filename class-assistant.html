@@ -734,32 +734,49 @@
         let currentTaskProgressId = null;
 
         function openTaskProgressModal(taskId) {
-            currentTaskProgressId = taskId;
-            const data = getDailyData();
-            const t = data.tasks.find(x => x.id === taskId);
-            if(!t) return;
-            
-            const completed = new Set(t.completedStudents || []);
-            const cls = getCurrentClass();
-            const grid = document.getElementById('taskProgressGrid');
-            grid.innerHTML = '';
-            
-            let activeCount = 0;
-            cls.participants.forEach(p => {
-                if(!p.active) return;
-                activeCount++;
-                const btn = document.createElement('div');
-                const isCompleted = completed.has(p.id);
-                btn.className = `cursor-pointer p-2 rounded-xl text-center border-2 transition-all font-bold ${isCompleted ? 'bg-emerald-100 border-emerald-500 text-emerald-700' : 'bg-white border-gray-200 text-gray-500 hover:border-emerald-300'}`;
-                btn.textContent = p.name;
-                btn.onclick = () => toggleTaskStudent(taskId, p.id, btn);
-                grid.appendChild(btn);
-            });
-            
-            document.getElementById('taskProgressInfo').textContent = `- ${t.text}`;
-            document.getElementById('taskProgressStats').textContent = `進度：${completed.size} / ${activeCount} 人`;
-            
-            document.getElementById('taskProgressModal').classList.remove('hidden');
+            try {
+                currentTaskProgressId = taskId;
+                const data = getDailyData();
+                const t = data.tasks.find(x => x.id === taskId);
+                if(!t) {
+                    alert('找不到此任務資料！');
+                    return;
+                }
+                
+                const completed = new Set(t.completedStudents || []);
+                const cls = getCurrentClass();
+                const grid = document.getElementById('taskProgressGrid');
+                if (!grid) {
+                    alert('找不到網格元素 (taskProgressGrid)！');
+                    return;
+                }
+                grid.innerHTML = '';
+                
+                let activeCount = 0;
+                cls.participants.forEach(p => {
+                    if(!p.active) return;
+                    activeCount++;
+                    const btn = document.createElement('div');
+                    const isCompleted = completed.has(p.id);
+                    btn.className = `cursor-pointer p-2 rounded-xl text-center border-2 transition-all font-bold ${isCompleted ? 'bg-emerald-100 border-emerald-500 text-emerald-700' : 'bg-white border-gray-200 text-gray-500 hover:border-emerald-300'}`;
+                    btn.textContent = p.name;
+                    btn.onclick = () => toggleTaskStudent(taskId, p.id, btn);
+                    grid.appendChild(btn);
+                });
+                
+                document.getElementById('taskProgressInfo').textContent = `- ${t.text}`;
+                document.getElementById('taskProgressStats').textContent = `進度：${completed.size} / ${activeCount} 人`;
+                
+                const modal = document.getElementById('taskProgressModal');
+                if (!modal) {
+                    alert('找不到視窗元素 (taskProgressModal)！');
+                    return;
+                }
+                modal.classList.remove('hidden');
+            } catch (err) {
+                alert('發生錯誤：' + err.message + '\n請截圖告知開發者！');
+                console.error(err);
+            }
         }
 
         function toggleTaskStudent(taskId, studentId, element) {
