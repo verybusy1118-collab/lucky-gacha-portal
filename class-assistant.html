@@ -404,8 +404,8 @@
 
             // Ensure current class structure exists
             if (!assistantData[currentClassId]) {
-                assistantData[currentClassId] = { events: [] };
-            if (!assistantData[currentClassId]) assistantData[currentClassId] = { events: [], incidents: [] };
+                assistantData[currentClassId] = { events: [], incidents: [] };
+            }
 
             setupClassSelector();
             renderCategorySelects();
