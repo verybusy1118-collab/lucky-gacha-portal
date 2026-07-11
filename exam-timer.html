@@ -4,96 +4,142 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>考試重要提醒</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
-            background-color: #ffffff; /* 白底 */
-            color: #000000; /* 黑字 */
+            background-color: #ffffff;
+            color: #000000;
             min-height: 100vh;
             margin: 0;
             display: flex;
             flex-direction: column;
         }
-
-        /* 隱藏捲軸但允許滾動 */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-
-        .highlight-text {
-            color: #ef4444; /* 紅色，提醒即將結束 */
-            transition: color 0.5s ease;
-        }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 
         .clock-font {
             font-family: 'Courier New', Courier, monospace;
             font-weight: bold;
         }
+
+        /* 顏色過渡效果 (不閃爍) */
+        .time-display {
+            transition: color 1s ease;
+        }
+        
+        .color-normal { color: #000000; }
+        .color-stage1 { color: #16a34a; } /* 綠色 */
+        .color-stage2 { color: #f97316; } /* 橘色 */
+        .color-stage3 { color: #dc2626; } /* 紅色 */
+
+        .schedule-item {
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .schedule-item.active {
+            background-color: #1e40af; /* blue-800 */
+            color: white;
+            border-color: #1e40af;
+            transform: scale(1.05);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .schedule-item:not(.active):hover {
+            background-color: #f3f4f6;
+        }
+
+        #gear-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            border: 2px solid #e5e7eb;
+            color: #9ca3af;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 40;
+        }
+        #gear-btn:hover {
+            color: #4b5563;
+            border-color: #d1d5db;
+            background: white;
+            transform: rotate(90deg);
+        }
     </style>
 </head>
-<body class="p-4 md:p-8 flex flex-col h-screen">
+<body class="p-4 md:p-8 flex flex-col h-screen overflow-hidden">
 
-    <!-- 標題區：科目 -->
-    <header class="w-full text-center py-4 border-b-4 border-black mb-6 flex-shrink-0 relative">
-        <h1 id="display-subject" class="text-5xl md:text-6xl font-extrabold tracking-widest">國語科 期中考</h1>
-    </header>
+    <!-- 頂部：所有考試科目順序 (Schedule) -->
+    <div class="w-full mb-6 flex-shrink-0">
+        <h2 class="text-lg font-bold text-gray-500 mb-2 border-b-2 border-gray-200 pb-1 flex justify-between items-center">
+            <span>📋 今日考試日程 (點擊可切換當下考試科目)</span>
+            <span class="text-sm font-normal bg-gray-100 px-2 py-1 rounded">可點擊齒輪或輸入 666 進入後台</span>
+        </h2>
+        <div id="schedule-container" class="flex gap-3 overflow-x-auto py-2 px-1">
+            <!-- 動態插入日程 -->
+        </div>
+    </div>
 
     <!-- 內容區 -->
-    <main class="flex-grow grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+    <main class="flex-grow grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch min-h-0">
         
         <!-- 左側：時間資訊 -->
-        <div class="flex flex-col justify-center space-y-8 border-4 border-black rounded-3xl p-8 bg-gray-50">
-            <!-- 現在時間 -->
-            <div class="text-center">
-                <h2 class="text-3xl font-bold text-gray-700 mb-2">現在時間</h2>
-                <div id="current-time" class="text-6xl md:text-8xl clock-font tracking-tight">10:00:00</div>
+        <div class="flex flex-col justify-center space-y-6 border-4 border-black rounded-3xl p-8 bg-gray-50 overflow-hidden relative">
+            
+            <div class="text-center mb-2">
+                <h1 id="display-subject" class="text-5xl md:text-6xl font-extrabold tracking-widest text-blue-900 drop-shadow-sm">尚未選擇科目</h1>
             </div>
 
-            <div class="h-1 w-full bg-gray-300 rounded-full"></div>
+            <!-- 現在時間 -->
+            <div class="text-center">
+                <h2 class="text-3xl font-bold text-gray-700 mb-1">現在時間</h2>
+                <div id="current-time" class="text-6xl md:text-7xl clock-font tracking-tight color-normal">10:00:00</div>
+            </div>
+
+            <div class="h-1 w-full bg-gray-300 rounded-full my-2"></div>
 
             <!-- 剩餘時間 -->
-            <div class="text-center">
+            <div class="text-center flex-grow flex flex-col justify-center">
                 <h2 class="text-3xl font-bold text-gray-700 mb-2">距離考試結束剩餘</h2>
-                <div id="remaining-time" class="text-7xl md:text-9xl clock-font tracking-tighter">--:--</div>
-                <div id="end-time-display" class="text-xl text-gray-500 mt-4 font-bold">結束時間：--:--</div>
+                <div id="remaining-time" class="text-7xl md:text-9xl clock-font tracking-tighter time-display color-normal">--:--</div>
+                <div id="end-time-display" class="text-2xl text-gray-500 mt-6 font-bold bg-white inline-block mx-auto px-6 py-2 rounded-full border-2 border-gray-200">結束時間：--:--</div>
             </div>
         </div>
 
         <!-- 右側：人數與注意事項 -->
-        <div class="flex flex-col space-y-6">
+        <div class="flex flex-col space-y-6 min-h-0">
             
             <!-- 人數統計 -->
-            <div class="grid grid-cols-3 gap-4 border-4 border-black rounded-3xl p-6 bg-gray-50 text-center">
+            <div class="grid grid-cols-3 gap-4 border-4 border-black rounded-3xl p-6 bg-gray-50 text-center flex-shrink-0">
                 <div>
-                    <h3 class="text-xl font-bold text-gray-600">應到人數</h3>
-                    <div id="count-expected" class="text-5xl font-extrabold mt-2">0</div>
+                    <h3 class="text-2xl font-bold text-gray-600">應到人數</h3>
+                    <div id="count-expected" class="text-6xl font-extrabold mt-2">0</div>
                 </div>
                 <div>
-                    <h3 class="text-xl font-bold text-gray-600">實到人數</h3>
-                    <div id="count-actual" class="text-5xl font-extrabold text-blue-600 mt-2">0</div>
+                    <h3 class="text-2xl font-bold text-gray-600">實到人數</h3>
+                    <div id="count-actual" class="text-6xl font-extrabold text-blue-600 mt-2">0</div>
                 </div>
                 <div>
-                    <h3 class="text-xl font-bold text-gray-600">缺考人數</h3>
-                    <div id="count-absent" class="text-5xl font-extrabold text-red-600 mt-2">0</div>
+                    <h3 class="text-2xl font-bold text-gray-600">缺考人數</h3>
+                    <div id="count-absent" class="text-6xl font-extrabold text-red-600 mt-2">0</div>
                 </div>
             </div>
 
             <!-- 注意事項 -->
             <div class="flex-grow border-4 border-black rounded-3xl p-6 bg-white overflow-y-auto">
-                <h2 class="text-3xl font-bold border-b-2 border-black pb-3 mb-4 flex items-center gap-3">
-                    <i class="fa-solid fa-bullhorn"></i> 考試注意事項
+                <h2 class="text-3xl font-bold border-b-4 border-black pb-4 mb-5 flex items-center gap-3">
+                    <i class="fa-solid fa-bullhorn text-yellow-500"></i> 考試注意事項
                 </h2>
-                <ul id="notes-list" class="space-y-4 text-2xl font-medium list-disc list-inside leading-relaxed">
+                <ul id="notes-list" class="space-y-5 text-2xl font-bold list-disc list-inside leading-relaxed text-gray-800">
                     <!-- 動態生成注意事項 -->
                 </ul>
             </div>
@@ -102,58 +148,85 @@
 
     </main>
 
+    <!-- 齒輪按鈕 -->
+    <button id="gear-btn" onclick="openSettings()" title="設定 (快捷鍵 666)">
+        <i class="fa-solid fa-gear"></i>
+    </button>
+
     <!-- 後台設定 Modal -->
     <div id="settings-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
-        <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div class="bg-gray-800 px-6 py-4 flex justify-between items-center text-white">
-                <h2 class="text-xl font-bold flex items-center gap-2"><i class="fa-solid fa-gear"></i> 考試設定 (後台)</h2>
+        <div class="bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
+            <div class="bg-gray-800 px-6 py-4 flex justify-between items-center text-white flex-shrink-0">
+                <h2 class="text-xl font-bold flex items-center gap-2"><i class="fa-solid fa-gear"></i> 考試設定後台</h2>
                 <button onclick="closeSettings()" class="text-gray-300 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
             </div>
             
-            <div class="p-6 overflow-y-auto flex-grow space-y-4 text-base">
-                <!-- 基本設定 -->
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-gray-700 font-bold mb-1">考試科目</label>
-                        <input type="text" id="setting-subject" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" placeholder="例如：國語科 期中考">
+            <div class="p-6 overflow-y-auto flex-grow space-y-6 text-base bg-gray-50">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- 左欄：科目排程設定 -->
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+                        <h3 class="text-lg font-bold text-gray-800 mb-3 border-b pb-2"><i class="fa-solid fa-list-ol text-blue-500"></i> 考試科目排程設定</h3>
+                        
+                        <div id="setting-schedule-list" class="space-y-3 mb-4 max-h-[300px] overflow-y-auto pr-2">
+                            <!-- JS 動態插入排程輸入框 -->
+                        </div>
+                        
+                        <button onclick="addScheduleItem()" class="w-full py-2 border-2 border-dashed border-blue-300 text-blue-600 rounded-lg font-bold hover:bg-blue-50 transition">
+                            <i class="fa-solid fa-plus"></i> 新增考試科目
+                        </button>
                     </div>
-                    <div>
-                        <label class="block text-gray-700 font-bold mb-1">考試結束時間</label>
-                        <input type="time" id="setting-end-time" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
-                    </div>
-                </div>
 
-                <!-- 提醒設定 -->
-                <div>
-                    <label class="block text-gray-700 font-bold mb-1">倒數幾分鐘變色提醒 (紅色)</label>
-                    <div class="flex items-center gap-2">
-                        <input type="number" id="setting-highlight-time" min="0" class="w-24 border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" value="5">
-                        <span class="text-gray-600">分鐘</span>
-                    </div>
-                </div>
+                    <!-- 右欄：其他設定 -->
+                    <div class="space-y-6">
+                        
+                        <!-- 變色提醒設定 -->
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+                            <h3 class="text-lg font-bold text-gray-800 mb-3 border-b pb-2"><i class="fa-solid fa-palette text-pink-500"></i> 三階段倒數變色提醒</h3>
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <label class="font-bold text-green-600 flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-green-600"></div> 第一階段 (綠色)</label>
+                                    <div class="flex items-center gap-2">倒數 <input type="number" id="setting-stage1" min="1" class="w-16 border rounded px-2 py-1 text-center font-bold"> 分鐘</div>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <label class="font-bold text-orange-500 flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-orange-500"></div> 第二階段 (橘色)</label>
+                                    <div class="flex items-center gap-2">倒數 <input type="number" id="setting-stage2" min="1" class="w-16 border rounded px-2 py-1 text-center font-bold"> 分鐘</div>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <label class="font-bold text-red-600 flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-red-600"></div> 第三階段 (紅色)</label>
+                                    <div class="flex items-center gap-2">倒數 <input type="number" id="setting-stage3" min="1" class="w-16 border rounded px-2 py-1 text-center font-bold"> 分鐘</div>
+                                </div>
+                            </div>
+                        </div>
 
-                <!-- 人數設定 -->
-                <div class="grid grid-cols-2 gap-4 border-t border-gray-200 pt-4">
-                    <div>
-                        <label class="block text-gray-700 font-bold mb-1">應到人數</label>
-                        <input type="number" id="setting-expected" min="0" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 font-bold mb-1">實到人數</label>
-                        <input type="number" id="setting-actual" min="0" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                        <!-- 人數設定 -->
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+                            <h3 class="text-lg font-bold text-gray-800 mb-3 border-b pb-2"><i class="fa-solid fa-users text-indigo-500"></i> 班級人數設定</h3>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-gray-700 font-bold mb-1">應到人數</label>
+                                    <input type="number" id="setting-expected" min="0" class="w-full border rounded-lg px-3 py-2 text-lg font-bold">
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 font-bold mb-1">實到人數</label>
+                                    <input type="number" id="setting-actual" min="0" class="w-full border rounded-lg px-3 py-2 text-lg font-bold">
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- 注意事項 -->
-                <div class="border-t border-gray-200 pt-4">
-                    <label class="block text-gray-700 font-bold mb-1">注意事項 (每行一點)</label>
-                    <textarea id="setting-notes" rows="5" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none resize-none" placeholder="請將手機關機並收到書包內&#10;作答完畢請安靜檢查&#10;鐘聲響畢請立刻停筆"></textarea>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+                    <h3 class="text-lg font-bold text-gray-800 mb-3 border-b pb-2"><i class="fa-solid fa-pen-to-square text-teal-500"></i> 注意事項 (每行一點)</h3>
+                    <textarea id="setting-notes" rows="4" class="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:border-blue-500 focus:outline-none resize-none font-medium" placeholder="請將手機關機並收到書包內&#10;作答完畢請安靜檢查&#10;鐘聲響畢請立刻停筆"></textarea>
                 </div>
+
             </div>
 
-            <div class="bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t">
-                <button onclick="closeSettings()" class="px-5 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 font-bold">取消</button>
-                <button onclick="saveSettings()" class="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-bold flex items-center gap-2">
+            <div class="bg-gray-100 px-6 py-4 flex justify-end gap-3 border-t flex-shrink-0">
+                <button onclick="closeSettings()" class="px-6 py-2 rounded-lg bg-gray-300 text-gray-800 hover:bg-gray-400 font-bold transition">取消</button>
+                <button onclick="saveSettings()" class="px-8 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-bold flex items-center gap-2 shadow-lg transition transform hover:scale-105">
                     <i class="fa-solid fa-floppy-disk"></i> 儲存設定
                 </button>
             </div>
@@ -161,41 +234,52 @@
     </div>
 
     <script>
-        // 預設資料
+        // 資料結構
         let examData = {
-            subject: '國語科 期中考',
-            endTime: '', // HH:MM
-            highlightMinutes: 5,
+            schedule: [
+                { id: '1', subject: '國語科 期中考', endTime: '09:00' },
+                { id: '2', subject: '數學科 期中考', endTime: '10:10' },
+                { id: '3', subject: '英文科 期中考', endTime: '11:20' }
+            ],
+            activeScheduleId: '1',
+            stages: {
+                stage1: 10, // 綠色
+                stage2: 5,  // 橘色
+                stage3: 1   // 紅色
+            },
             expected: 30,
             actual: 30,
             notes: "請將手機關機並收到書包內\n作答完畢請安靜檢查\n鐘聲響畢請立刻停筆"
         };
 
-        // 載入 localStorage 資料
-        const savedData = localStorage.getItem('examRemindersData');
-        if (savedData) {
-            try {
-                examData = { ...examData, ...JSON.parse(savedData) };
-            } catch (e) {
-                console.error('Error parsing saved data');
-            }
-        }
+        // 供後台排程列表編輯用的暫存陣列
+        let editingSchedule = [];
 
-        // 啟動與初始化
+        // 初始化
         document.addEventListener('DOMContentLoaded', () => {
+            const savedData = localStorage.getItem('examRemindersDataAdvanced');
+            if (savedData) {
+                try {
+                    examData = { ...examData, ...JSON.parse(savedData) };
+                } catch (e) {
+                    console.error('Error parsing saved data');
+                }
+            }
+
+            // 確保有 active ID
+            if (!examData.schedule.find(s => s.id === examData.activeScheduleId) && examData.schedule.length > 0) {
+                examData.activeScheduleId = examData.schedule[0].id;
+            }
+
             updateDisplayFromData();
             startClock();
             
-            // 監聽密碼 666
+            // 密碼 666
             let keyBuffer = '';
             document.addEventListener('keydown', (e) => {
-                // 如果在輸入框內，不攔截按鍵
                 if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-
                 keyBuffer += e.key;
-                if (keyBuffer.length > 3) {
-                    keyBuffer = keyBuffer.substring(1);
-                }
+                if (keyBuffer.length > 3) keyBuffer = keyBuffer.substring(1);
                 if (keyBuffer === '666') {
                     openSettings();
                     keyBuffer = '';
@@ -203,10 +287,39 @@
             });
         });
 
-        // 畫面更新機制
+        // ================= 前台顯示 =================
+
+        function setActiveSubject(id) {
+            examData.activeScheduleId = id;
+            localStorage.setItem('examRemindersDataAdvanced', JSON.stringify(examData));
+            updateDisplayFromData();
+        }
+
         function updateDisplayFromData() {
-            // 科目
-            document.getElementById('display-subject').textContent = examData.subject || '考試科目未設定';
+            // 渲染頂部排程表
+            const scheduleContainer = document.getElementById('schedule-container');
+            scheduleContainer.innerHTML = '';
+            
+            if (examData.schedule.length === 0) {
+                scheduleContainer.innerHTML = '<div class="text-gray-400 italic">尚未設定任何科目排程</div>';
+                document.getElementById('display-subject').textContent = '無科目設定';
+                document.getElementById('end-time-display').textContent = '結束時間：--:--';
+            }
+
+            examData.schedule.forEach((item, index) => {
+                const isActive = item.id === examData.activeScheduleId;
+                
+                const btn = document.createElement('div');
+                btn.className = `schedule-item px-5 py-2 rounded-xl border-2 font-bold text-lg flex items-center gap-2 whitespace-nowrap select-none ${isActive ? 'active' : 'border-gray-300 text-gray-600 bg-white'}`;
+                btn.innerHTML = `<span class="bg-black/10 px-2 py-0.5 rounded text-sm">${index+1}</span> ${item.subject} <span class="text-sm font-normal opacity-90">(${item.endTime})</span>`;
+                btn.onclick = () => setActiveSubject(item.id);
+                scheduleContainer.appendChild(btn);
+
+                if (isActive) {
+                    document.getElementById('display-subject').textContent = item.subject;
+                    document.getElementById('end-time-display').textContent = `結束時間：${item.endTime}`;
+                }
+            });
 
             // 人數
             const expected = parseInt(examData.expected) || 0;
@@ -216,98 +329,90 @@
             document.getElementById('count-expected').textContent = expected;
             document.getElementById('count-actual').textContent = actual;
             document.getElementById('count-absent').textContent = absent;
-            
-            if(absent > 0) {
-                document.getElementById('count-absent').classList.add('text-red-600');
-            } else {
-                document.getElementById('count-absent').classList.remove('text-red-600');
-            }
+            document.getElementById('count-absent').className = absent > 0 ? "text-6xl font-extrabold text-red-600 mt-2" : "text-6xl font-extrabold text-gray-400 mt-2";
 
             // 注意事項
             const notesList = document.getElementById('notes-list');
             notesList.innerHTML = '';
             if (examData.notes) {
-                const notesArr = examData.notes.split('\n').filter(n => n.trim() !== '');
-                notesArr.forEach(note => {
+                examData.notes.split('\n').filter(n => n.trim()).forEach(note => {
                     const li = document.createElement('li');
                     li.textContent = note;
                     notesList.appendChild(li);
                 });
             }
 
-            // 結束時間顯示
-            if (examData.endTime) {
-                document.getElementById('end-time-display').textContent = `結束時間：${examData.endTime}`;
-            } else {
-                document.getElementById('end-time-display').textContent = `尚未設定結束時間`;
-            }
-
-            // 立刻更新一次倒數
             updateTimer();
         }
 
-        // 時鐘與倒數邏輯
+        // ================= 時鐘與倒數邏輯 =================
+
         function startClock() {
             setInterval(() => {
-                // 更新現在時間
                 const now = new Date();
                 const h = String(now.getHours()).padStart(2, '0');
                 const m = String(now.getMinutes()).padStart(2, '0');
                 const s = String(now.getSeconds()).padStart(2, '0');
                 document.getElementById('current-time').textContent = `${h}:${m}:${s}`;
-
-                // 更新倒數
                 updateTimer(now);
             }, 1000);
         }
 
         function updateTimer(nowDate = new Date()) {
             const remainingEl = document.getElementById('remaining-time');
+            const activeSub = examData.schedule.find(s => s.id === examData.activeScheduleId);
             
-            if (!examData.endTime) {
+            if (!activeSub || !activeSub.endTime) {
                 remainingEl.textContent = '--:--';
-                remainingEl.classList.remove('highlight-text');
+                remainingEl.className = 'text-7xl md:text-9xl clock-font tracking-tighter time-display color-normal';
                 return;
             }
 
-            // 解析結束時間
-            const [endH, endM] = examData.endTime.split(':').map(Number);
+            const [endH, endM] = activeSub.endTime.split(':').map(Number);
             const endDate = new Date(nowDate);
             endDate.setHours(endH, endM, 0, 0);
 
-            // 如果現在時間已經超過今天的結束時間，判斷是否跨日 (這裡為簡單起見，假設都是當日考試，過期則顯示 00:00)
             let diffMs = endDate.getTime() - nowDate.getTime();
 
             if (diffMs <= 0) {
                 remainingEl.textContent = '00:00';
-                remainingEl.classList.add('highlight-text');
+                remainingEl.className = 'text-7xl md:text-9xl clock-font tracking-tighter time-display color-stage3';
                 return;
             }
 
-            // 計算分秒
             const totalSeconds = Math.floor(diffMs / 1000);
             const minutes = Math.floor(totalSeconds / 60);
             const seconds = totalSeconds % 60;
 
-            const mStr = String(minutes).padStart(2, '0');
-            const sStr = String(seconds).padStart(2, '0');
-            
-            remainingEl.textContent = `${mStr}:${sStr}`;
+            remainingEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
-            // 變色提醒判斷
-            const highlightMs = examData.highlightMinutes * 60 * 1000;
-            if (diffMs <= highlightMs && highlightMs > 0) {
-                remainingEl.classList.add('highlight-text');
-            } else {
-                remainingEl.classList.remove('highlight-text');
+            // 判斷顏色階段 (分鐘數換算毫秒)
+            const stage3Ms = (examData.stages.stage3 || 1) * 60 * 1000;
+            const stage2Ms = (examData.stages.stage2 || 5) * 60 * 1000;
+            const stage1Ms = (examData.stages.stage1 || 10) * 60 * 1000;
+
+            let colorClass = 'color-normal';
+            if (diffMs <= stage3Ms) {
+                colorClass = 'color-stage3'; // 紅
+            } else if (diffMs <= stage2Ms) {
+                colorClass = 'color-stage2'; // 橘
+            } else if (diffMs <= stage1Ms) {
+                colorClass = 'color-stage1'; // 綠
             }
+
+            remainingEl.className = `text-7xl md:text-9xl clock-font tracking-tighter time-display ${colorClass}`;
         }
 
-        // 設定 Modal 邏輯
+        // ================= 後台設定邏輯 =================
+
         function openSettings() {
-            document.getElementById('setting-subject').value = examData.subject;
-            document.getElementById('setting-end-time').value = examData.endTime;
-            document.getElementById('setting-highlight-time').value = examData.highlightMinutes;
+            // 深拷貝排程供編輯
+            editingSchedule = JSON.parse(JSON.stringify(examData.schedule));
+            renderSettingScheduleList();
+
+            document.getElementById('setting-stage1').value = examData.stages.stage1;
+            document.getElementById('setting-stage2').value = examData.stages.stage2;
+            document.getElementById('setting-stage3').value = examData.stages.stage3;
             document.getElementById('setting-expected').value = examData.expected;
             document.getElementById('setting-actual').value = examData.actual;
             document.getElementById('setting-notes').value = examData.notes;
@@ -320,18 +425,84 @@
         }
 
         function saveSettings() {
-            examData.subject = document.getElementById('setting-subject').value;
-            examData.endTime = document.getElementById('setting-end-time').value;
-            examData.highlightMinutes = parseInt(document.getElementById('setting-highlight-time').value) || 0;
+            // 儲存排程 (從 DOM 取回目前值)
+            const listEl = document.getElementById('setting-schedule-list');
+            const rows = listEl.querySelectorAll('.schedule-row');
+            const newSchedule = [];
+            rows.forEach((row, idx) => {
+                const id = row.dataset.id;
+                const subject = row.querySelector('.sch-subject').value;
+                const endTime = row.querySelector('.sch-endtime').value;
+                if(subject && endTime) {
+                    newSchedule.push({ id, subject, endTime });
+                }
+            });
+            examData.schedule = newSchedule;
+
+            // 確保 activeId 還有效
+            if (!examData.schedule.find(s => s.id === examData.activeScheduleId) && examData.schedule.length > 0) {
+                examData.activeScheduleId = examData.schedule[0].id;
+            } else if (examData.schedule.length === 0) {
+                examData.activeScheduleId = null;
+            }
+
+            examData.stages.stage1 = parseInt(document.getElementById('setting-stage1').value) || 10;
+            examData.stages.stage2 = parseInt(document.getElementById('setting-stage2').value) || 5;
+            examData.stages.stage3 = parseInt(document.getElementById('setting-stage3').value) || 1;
+            
             examData.expected = document.getElementById('setting-expected').value;
             examData.actual = document.getElementById('setting-actual').value;
             examData.notes = document.getElementById('setting-notes').value;
 
-            // 存入 localStorage
-            localStorage.setItem('examRemindersData', JSON.stringify(examData));
+            localStorage.setItem('examRemindersDataAdvanced', JSON.stringify(examData));
 
             updateDisplayFromData();
             closeSettings();
+        }
+
+        // 後台排程編輯功能
+        function renderSettingScheduleList() {
+            const container = document.getElementById('setting-schedule-list');
+            container.innerHTML = '';
+            if(editingSchedule.length === 0) {
+                container.innerHTML = '<div class="text-gray-400 text-center py-2">目前沒有任何科目，請點擊下方新增</div>';
+            }
+            editingSchedule.forEach((item, index) => {
+                const row = document.createElement('div');
+                row.className = 'schedule-row flex items-center gap-2 bg-gray-50 p-2 rounded border border-gray-200';
+                row.dataset.id = item.id;
+                
+                row.innerHTML = `
+                    <div class="font-bold text-gray-500 w-6 text-center">${index+1}</div>
+                    <input type="text" class="sch-subject flex-grow border rounded px-2 py-1 text-sm focus:border-blue-500 outline-none" value="${item.subject}" placeholder="科目名稱">
+                    <input type="time" class="sch-endtime w-28 border rounded px-2 py-1 text-sm focus:border-blue-500 outline-none" value="${item.endTime}">
+                    <button onclick="removeScheduleItem('${item.id}')" class="text-red-500 hover:text-red-700 p-1"><i class="fa-solid fa-trash-can"></i></button>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function addScheduleItem() {
+            const newId = Date.now().toString();
+            editingSchedule.push({ id: newId, subject: '', endTime: '' });
+            renderSettingScheduleList();
+            
+            // 捲動到底部
+            const listEl = document.getElementById('setting-schedule-list');
+            listEl.scrollTop = listEl.scrollHeight;
+        }
+
+        function removeScheduleItem(id) {
+            // 同步將畫面上的值存回 editingSchedule
+            const rows = document.querySelectorAll('.schedule-row');
+            editingSchedule = Array.from(rows).map(row => ({
+                id: row.dataset.id,
+                subject: row.querySelector('.sch-subject').value,
+                endTime: row.querySelector('.sch-endtime').value
+            }));
+
+            editingSchedule = editingSchedule.filter(item => item.id !== id);
+            renderSettingScheduleList();
         }
     </script>
 </body>
