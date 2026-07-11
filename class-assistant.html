@@ -230,6 +230,7 @@
                 <section class="card p-5 col-span-1 md:col-span-3">
                     <h3 class="text-lg font-bold text-rose-600 mb-4 border-b pb-2 flex justify-between items-center">
                         <span><i class="fa-solid fa-book-medical"></i> 學生行為事件紀錄簿</span>
+                        <button onclick="openManualIncidentModal()" class="px-3 py-1 bg-rose-100 text-rose-700 rounded-lg text-sm hover:bg-rose-200 transition-colors"><i class="fa-solid fa-plus"></i> 新增紀錄</button>
                     </h3>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm whitespace-nowrap">
@@ -457,23 +458,34 @@
             perf: ['一級棒', '要加油', '有進步']
         };
 
-        function getCustomCats(type) {
-            if (!assistantData.customCats) assistantData.customCats = { tasks: [], hw: [], perf: [] };
-            return assistantData.customCats[type] || [];
+        function getCats(type) {
+            // Migrate old customCats to new unified cats if necessary
+            if (!assistantData.cats) {
+                assistantData.cats = JSON.parse(JSON.stringify(DEFAULT_CATS));
+                if (assistantData.customCats) {
+                    ['tasks', 'hw', 'perf'].forEach(t => {
+                        assistantData.customCats[t].forEach(c => {
+                            if (!assistantData.cats[t].includes(c)) assistantData.cats[t].push(c);
+                        });
+                    });
+                }
+                saveData();
+            }
+            return assistantData.cats[type] || [];
         }
 
         function addCustomCat(type, cat) {
-            if (!assistantData.customCats) assistantData.customCats = { tasks: [], hw: [], perf: [] };
-            if (!assistantData.customCats[type].includes(cat)) {
-                assistantData.customCats[type].push(cat);
+            getCats(type); // Ensure initialized
+            if (!assistantData.cats[type].includes(cat)) {
+                assistantData.cats[type].push(cat);
                 saveData();
                 renderBackendCats();
             }
         }
 
         function deleteCustomCat(type, cat) {
-            if (!assistantData.customCats) return;
-            assistantData.customCats[type] = assistantData.customCats[type].filter(c => c !== cat);
+            getCats(type); // Ensure initialized
+            assistantData.cats[type] = assistantData.cats[type].filter(c => c !== cat);
             saveData();
             renderCategorySelects();
             renderBackendCats();
@@ -491,13 +503,13 @@
                 if (!container) return;
                 container.innerHTML = '';
                 
-                const customs = getCustomCats(t.id);
-                if (customs.length === 0) {
-                    container.innerHTML = '<span class="text-xs text-gray-400">尚無自訂分類</span>';
+                const cats = getCats(t.id);
+                if (cats.length === 0) {
+                    container.innerHTML = '<span class="text-xs text-gray-400">尚無分類選項</span>';
                     return;
                 }
                 
-                customs.forEach(cat => {
+                cats.forEach(cat => {
                     const div = document.createElement('div');
                     div.className = 'flex justify-between items-center bg-white border px-3 py-1.5 rounded-lg text-sm';
                     div.innerHTML = `
@@ -517,13 +529,7 @@
                 const currentVal = sel.value;
                 sel.innerHTML = '';
                 
-                DEFAULT_CATS[type].forEach(cat => {
-                    const opt = document.createElement('option');
-                    opt.value = cat; opt.textContent = cat;
-                    sel.appendChild(opt);
-                });
-                
-                getCustomCats(type).forEach(cat => {
+                getCats(type).forEach(cat => {
                     const opt = document.createElement('option');
                     opt.value = cat; opt.textContent = cat;
                     sel.appendChild(opt);
@@ -554,7 +560,8 @@
                         renderCategorySelects();
                         sel.value = newCat;
                     } else {
-                        sel.value = DEFAULT_CATS[type][0];
+                        const cats = getCats(type);
+                        sel.value = cats.length > 0 ? cats[0] : '';
                     }
                 });
             }
