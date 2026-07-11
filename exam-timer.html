@@ -108,7 +108,7 @@
             </div>
 
             <!-- 現在時間 -->
-            <div class="text-center">
+            <div class="text-center flex-shrink-0">
                 <h2 class="text-3xl font-bold text-gray-700 mb-1">現在時間</h2>
                 <div id="current-time" class="text-6xl md:text-7xl clock-font tracking-tight color-normal">10:00:00</div>
             </div>
@@ -120,9 +120,11 @@
                 <h2 class="text-3xl font-bold text-gray-700 mb-2">距離考試結束剩餘</h2>
                 <div id="remaining-time" class="text-7xl md:text-9xl clock-font tracking-tighter time-display color-normal leading-none mb-4">--:--</div>
                 
-                <!-- 大字幕提醒 (文字可自訂) -->
-                <div id="large-reminder" class="text-4xl md:text-5xl font-extrabold text-red-600 bounce-animation hidden mt-4 text-center">
-                    <i class="fa-solid fa-triangle-exclamation"></i> <span id="reminder-text"></span>
+                <!-- 大字幕提醒外層：預留高度避免排版跳動 -->
+                <div class="h-12 md:h-16 mt-4 flex items-center justify-center w-full">
+                    <div id="large-reminder" class="text-4xl md:text-5xl font-extrabold text-red-600 bounce-animation hidden text-center">
+                        <i class="fa-solid fa-triangle-exclamation"></i> <span id="reminder-text"></span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -222,25 +224,17 @@
                             </div>
                         </div>
 
-                        <!-- 大字幕文字提醒設定 -->
+                        <!-- 大字幕文字提醒設定 (可自訂新增) -->
                         <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
                             <h3 class="text-lg font-bold text-gray-800 mb-3 border-b pb-2"><i class="fa-solid fa-message text-indigo-500"></i> 大字幕文字提醒設定</h3>
-                            <div class="space-y-3">
-                                <div class="flex items-center gap-2">
-                                    <input type="checkbox" id="setting-rem1-en" class="w-5 h-5 cursor-pointer">
-                                    <label class="font-bold text-gray-700 whitespace-nowrap">倒數</label>
-                                    <input type="number" id="setting-rem1-min" min="1" class="w-16 border rounded px-2 py-1 text-center font-bold">
-                                    <label class="font-bold text-gray-700 whitespace-nowrap">分:</label>
-                                    <input type="text" id="setting-rem1-text" class="flex-grow border rounded px-2 py-1 font-bold">
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <input type="checkbox" id="setting-rem2-en" class="w-5 h-5 cursor-pointer">
-                                    <label class="font-bold text-gray-700 whitespace-nowrap">倒數</label>
-                                    <input type="number" id="setting-rem2-min" min="1" class="w-16 border rounded px-2 py-1 text-center font-bold">
-                                    <label class="font-bold text-gray-700 whitespace-nowrap">分:</label>
-                                    <input type="text" id="setting-rem2-text" class="flex-grow border rounded px-2 py-1 font-bold">
-                                </div>
+                            
+                            <div id="setting-reminders-list" class="space-y-3 mb-3 max-h-[200px] overflow-y-auto pr-2">
+                                <!-- JS 動態插入 -->
                             </div>
+                            
+                            <button onclick="addReminderItem()" class="w-full py-2 border-2 border-dashed border-indigo-300 text-indigo-600 rounded-lg font-bold hover:bg-indigo-50 transition">
+                                <i class="fa-solid fa-plus"></i> 新增提醒
+                            </button>
                         </div>
 
                         <!-- 人數設定 -->
@@ -293,8 +287,8 @@
                 stage3: 1
             },
             textReminders: [
-                { enabled: true, minutes: 5, text: '把握時間答題' },
-                { enabled: true, minutes: 3, text: '記得多檢查' }
+                { id: 'r1', enabled: true, minutes: 5, text: '把握時間答題' },
+                { id: 'r2', enabled: true, minutes: 3, text: '記得多檢查' }
             ],
             expected: 30,
             actual: 30,
@@ -302,9 +296,10 @@
         };
 
         let editingSchedule = [];
+        let editingReminders = [];
 
         document.addEventListener('DOMContentLoaded', () => {
-            const savedData = localStorage.getItem('examRemindersDataAdvanced4');
+            const savedData = localStorage.getItem('examRemindersDataAdvanced5');
             if (savedData) {
                 try {
                     examData = { ...examData, ...JSON.parse(savedData) };
@@ -314,10 +309,10 @@
             }
             
             // 防呆補齊資料結構
-            if (!examData.textReminders) {
+            if (!examData.textReminders || examData.textReminders.length === 0) {
                 examData.textReminders = [
-                    { enabled: true, minutes: 5, text: '把握時間答題' },
-                    { enabled: true, minutes: 3, text: '記得多檢查' }
+                    { id: 'r1', enabled: true, minutes: 5, text: '把握時間答題' },
+                    { id: 'r2', enabled: true, minutes: 3, text: '記得多檢查' }
                 ];
             }
 
@@ -365,7 +360,7 @@
 
         function setActiveSubject(id) {
             examData.activeScheduleId = id;
-            localStorage.setItem('examRemindersDataAdvanced4', JSON.stringify(examData));
+            localStorage.setItem('examRemindersDataAdvanced5', JSON.stringify(examData));
             updateDisplayFromData();
         }
 
@@ -519,7 +514,7 @@
             let activeReminderText = null;
             if (totalSeconds > 0) {
                 // 找出所有符合條件 (剩餘秒數 <= 設定的分鐘數*60) 且啟用的提醒，選擇分鐘數最小的那個
-                const validReminders = examData.textReminders
+                const validReminders = (examData.textReminders || [])
                     .filter(r => r.enabled && totalSeconds <= r.minutes * 60)
                     .sort((a, b) => a.minutes - b.minutes); // 由小排到大
                 
@@ -557,19 +552,14 @@
             editingSchedule = JSON.parse(JSON.stringify(examData.schedule));
             renderSettingScheduleList();
 
+            editingReminders = JSON.parse(JSON.stringify(examData.textReminders || []));
+            renderSettingRemindersList();
+
             document.getElementById('setting-date').value = examData.examDate || '';
             document.getElementById('setting-stage1').value = examData.stages.stage1;
             document.getElementById('setting-stage2').value = examData.stages.stage2;
             document.getElementById('setting-stage3').value = examData.stages.stage3;
             
-            document.getElementById('setting-rem1-en').checked = examData.textReminders[0].enabled;
-            document.getElementById('setting-rem1-min').value = examData.textReminders[0].minutes;
-            document.getElementById('setting-rem1-text').value = examData.textReminders[0].text;
-            
-            document.getElementById('setting-rem2-en').checked = examData.textReminders[1].enabled;
-            document.getElementById('setting-rem2-min').value = examData.textReminders[1].minutes;
-            document.getElementById('setting-rem2-text').value = examData.textReminders[1].text;
-
             document.getElementById('setting-expected').value = examData.expected;
             document.getElementById('setting-actual').value = examData.actual;
             document.getElementById('setting-notes').value = examData.notes;
@@ -608,31 +598,26 @@
             });
             examData.schedule = newSchedule;
 
+            saveCurrentEditingReminders();
+            examData.textReminders = JSON.parse(JSON.stringify(editingReminders));
+
             examData.examDate = document.getElementById('setting-date').value;
 
             examData.stages.stage1 = parseInt(document.getElementById('setting-stage1').value) || 10;
             examData.stages.stage2 = parseInt(document.getElementById('setting-stage2').value) || 5;
             examData.stages.stage3 = parseInt(document.getElementById('setting-stage3').value) || 1;
             
-            examData.textReminders[0].enabled = document.getElementById('setting-rem1-en').checked;
-            examData.textReminders[0].minutes = parseInt(document.getElementById('setting-rem1-min').value) || 5;
-            examData.textReminders[0].text = document.getElementById('setting-rem1-text').value;
-
-            examData.textReminders[1].enabled = document.getElementById('setting-rem2-en').checked;
-            examData.textReminders[1].minutes = parseInt(document.getElementById('setting-rem2-min').value) || 3;
-            examData.textReminders[1].text = document.getElementById('setting-rem2-text').value;
-
             examData.expected = document.getElementById('setting-expected').value;
             examData.actual = document.getElementById('setting-actual').value;
             examData.notes = document.getElementById('setting-notes').value;
 
-            localStorage.setItem('examRemindersDataAdvanced4', JSON.stringify(examData));
+            localStorage.setItem('examRemindersDataAdvanced5', JSON.stringify(examData));
 
             updateDisplayFromData();
             closeSettings();
         }
 
-        // 建立 01-12 的選項
+        // --- 排程清單渲染 ---
         function getHourOptions(selected) {
             let opts = '';
             for(let i=1; i<=12; i++) {
@@ -642,7 +627,6 @@
             return opts;
         }
 
-        // 建立 00-59 的選項
         function getMinuteOptions(selected) {
             let opts = '';
             for(let i=0; i<=59; i++) {
@@ -667,7 +651,6 @@
                     <div class="font-bold text-gray-500 w-6 text-center shrink-0">${index+1}</div>
                     <input type="text" class="sch-subject flex-grow min-w-[120px] border rounded px-2 py-1.5 text-sm focus:border-blue-500 outline-none" value="${item.subject}" placeholder="科目名稱">
                     
-                    <!-- 開始時間 -->
                     <div class="flex items-center gap-1 shrink-0 bg-white border p-1 rounded">
                         <span class="text-xs text-gray-500">起</span>
                         <select class="sch-s-ampm border-none bg-transparent text-sm focus:outline-none">
@@ -679,7 +662,6 @@
                         <select class="sch-s-m border-none bg-transparent text-sm focus:outline-none">${getMinuteOptions(item.startTime.m)}</select>
                     </div>
 
-                    <!-- 結束時間 -->
                     <div class="flex items-center gap-1 shrink-0 bg-white border p-1 rounded">
                         <span class="text-xs text-gray-500">迄</span>
                         <select class="sch-e-ampm border-none bg-transparent text-sm focus:outline-none">
@@ -699,7 +681,6 @@
 
         function addScheduleItem() {
             const newId = Date.now().toString();
-            // Default logic
             let s = { ampm: 'AM', h: '08', m: '00' };
             let e = { ampm: 'AM', h: '09', m: '00' };
             
@@ -743,6 +724,55 @@
 
             editingSchedule = editingSchedule.filter(item => item.id !== id);
             renderSettingScheduleList();
+        }
+
+        // --- 大字幕提醒清單渲染 ---
+        function renderSettingRemindersList() {
+            const container = document.getElementById('setting-reminders-list');
+            container.innerHTML = '';
+            if(editingReminders.length === 0) {
+                container.innerHTML = '<div class="text-gray-400 text-center py-2">目前沒有任何大字幕提醒</div>';
+            }
+            editingReminders.forEach((item) => {
+                const row = document.createElement('div');
+                row.className = 'reminder-row flex items-center gap-2 bg-gray-50 p-2 rounded border border-gray-200';
+                row.dataset.id = item.id;
+                
+                row.innerHTML = `
+                    <input type="checkbox" class="rem-en w-5 h-5 cursor-pointer shrink-0" ${item.enabled ? 'checked' : ''} title="打勾表示啟用">
+                    <label class="font-bold text-gray-700 whitespace-nowrap text-sm shrink-0">倒數</label>
+                    <input type="number" class="rem-min w-16 border rounded px-1 py-1 text-center font-bold text-sm shrink-0" min="1" value="${item.minutes}">
+                    <label class="font-bold text-gray-700 whitespace-nowrap text-sm shrink-0">分:</label>
+                    <input type="text" class="rem-text flex-grow border rounded px-2 py-1 font-bold text-sm focus:border-indigo-500 outline-none" value="${item.text}" placeholder="提醒文字 (例如：把握時間)">
+                    <button onclick="removeReminderItem('${item.id}')" class="text-red-500 hover:text-red-700 p-2 shrink-0"><i class="fa-solid fa-trash-can"></i></button>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function addReminderItem() {
+            saveCurrentEditingReminders();
+            const newId = 'r' + Date.now().toString();
+            editingReminders.push({ id: newId, enabled: true, minutes: 1, text: '' });
+            renderSettingRemindersList();
+            const listEl = document.getElementById('setting-reminders-list');
+            listEl.scrollTop = listEl.scrollHeight;
+        }
+
+        function removeReminderItem(id) {
+            saveCurrentEditingReminders();
+            editingReminders = editingReminders.filter(item => item.id !== id);
+            renderSettingRemindersList();
+        }
+
+        function saveCurrentEditingReminders() {
+            const rows = document.querySelectorAll('.reminder-row');
+            editingReminders = Array.from(rows).map(row => ({
+                id: row.dataset.id,
+                enabled: row.querySelector('.rem-en').checked,
+                minutes: parseInt(row.querySelector('.rem-min').value) || 1,
+                text: row.querySelector('.rem-text').value
+            }));
         }
     </script>
 </body>
