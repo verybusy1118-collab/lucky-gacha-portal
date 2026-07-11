@@ -922,6 +922,108 @@
             renderEvents();
         }
 
+        // --- Incident Management ---
+        function openIncidentModal(studentName, category, text) {
+            document.getElementById('incDate').value = currentDate;
+            document.getElementById('incStudent').value = studentName;
+            document.getElementById('incStudent').readOnly = !!studentName;
+            
+            document.getElementById('incCategory').value = category;
+            document.getElementById('incCategory').readOnly = !!category;
+            
+            document.getElementById('incText').value = text;
+            document.getElementById('incText').readOnly = !!text;
+            
+            document.getElementById('incProcess').value = '';
+            document.getElementById('incContact').value = '';
+            document.getElementById('incNote').value = '';
+            
+            document.getElementById('incidentModal').classList.remove('hidden');
+        }
+
+        function openManualIncidentModal() {
+            openIncidentModal('', '', '');
+        }
+
+        function closeIncidentModal() {
+            document.getElementById('incidentModal').classList.add('hidden');
+        }
+
+        function saveIncidentForm() {
+            const date = document.getElementById('incDate').value;
+            const student = document.getElementById('incStudent').value.trim();
+            const category = document.getElementById('incCategory').value.trim();
+            const text = document.getElementById('incText').value.trim();
+            const process = document.getElementById('incProcess').value.trim();
+            const contact = document.getElementById('incContact').value.trim();
+            const note = document.getElementById('incNote').value.trim();
+            
+            if(!student || !category || !process) {
+                Swal.fire({ icon: 'warning', title: '請填寫必填欄位！', text: '學生姓名、行為分類、處理過程不可空白' });
+                return;
+            }
+
+            if(!assistantData[currentClassId].incidents) assistantData[currentClassId].incidents = [];
+            
+            assistantData[currentClassId].incidents.push({
+                id: uuid(),
+                date, student, category, text, process, contact, note
+            });
+            
+            saveData();
+            closeIncidentModal();
+            renderIncidentLogs();
+            
+            Swal.fire({ icon: 'success', title: '已寫入事件紀錄簿！', timer: 1500, showConfirmButton: false });
+        }
+
+        function renderIncidentLogs() {
+            const tbody = document.getElementById('incidentLogsTableBody');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            
+            const incidents = assistantData[currentClassId].incidents || [];
+            if(incidents.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">目前尚無任何異常事件紀錄</td></tr>';
+                return;
+            }
+            
+            // Sort by date descending
+            const sorted = [...incidents].sort((a,b) => new Date(b.date) - new Date(a.date));
+            
+            sorted.forEach(inc => {
+                const tr = document.createElement('tr');
+                tr.className = "border-b hover:bg-rose-50 transition-colors";
+                tr.innerHTML = `
+                    <td class="px-4 py-3">${inc.date}</td>
+                    <td class="px-4 py-3 font-bold">${inc.student}</td>
+                    <td class="px-4 py-3"><span class="px-2 py-1 bg-rose-100 text-rose-700 rounded-md text-xs font-bold">${inc.category}</span><br><span class="text-xs text-gray-500 mt-1 block">${inc.text || '-'}</span></td>
+                    <td class="px-4 py-3 text-sm">${inc.process}</td>
+                    <td class="px-4 py-3 text-sm text-gray-600">${inc.contact || '-'}</td>
+                    <td class="px-4 py-3 text-center">
+                        <button onclick="deleteIncident('${inc.id}')" class="text-gray-400 hover:text-rose-500"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        function deleteIncident(id) {
+            Swal.fire({
+                title: '確定刪除此紀錄？',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e11d48',
+                confirmButtonText: '刪除'
+            }).then((result) => {
+                if(result.isConfirmed) {
+                    assistantData[currentClassId].incidents = assistantData[currentClassId].incidents.filter(x => x.id !== id);
+                    saveData();
+                    renderIncidentLogs();
+                }
+            });
+        }
+
         // Boot
         init();
     </script>
