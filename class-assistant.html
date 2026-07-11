@@ -84,10 +84,16 @@
     <div class="max-w-6xl mx-auto">
         <!-- Header -->
         <header class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 bg-white/80 p-4 rounded-2xl shadow-sm backdrop-blur-sm">
-            <h1 class="text-3xl font-black text-emerald-600 flex items-center gap-3">
-                <i class="fa-solid fa-clipboard-list text-emerald-500"></i>
-                班務小秘書
-            </h1>
+            <div class="flex items-center gap-4">
+                <h1 class="text-3xl font-black text-emerald-600 flex items-center gap-3">
+                    <i class="fa-solid fa-clipboard-list text-emerald-500"></i>
+                    班務小秘書
+                </h1>
+                <div class="flex gap-2">
+                    <button onclick="showPanel('main')" id="tabMain" class="px-4 py-2 rounded-xl font-bold bg-emerald-600 text-white shadow-md transition-all">主控台</button>
+                    <button onclick="showPanel('backend')" id="tabBackend" class="px-4 py-2 rounded-xl font-bold bg-white text-gray-600 border hover:bg-gray-50 transition-all"><i class="fa-solid fa-gear"></i> 後台設定</button>
+                </div>
+            </div>
             
             <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
                 <select id="classSelector" class="px-4 py-2 rounded-xl border-2 border-emerald-200 bg-white text-emerald-800 font-bold focus:outline-none focus:border-emerald-400 cursor-pointer shadow-sm">
@@ -97,8 +103,8 @@
             </div>
         </header>
 
-        <!-- Main Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Main Panel -->
+        <div id="mainPanel" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             
             <!-- 任務與提醒 (To-Do) -->
             <section class="card p-5 flex flex-col h-[400px]">
@@ -189,6 +195,69 @@
             </section>
 
         </div>
+
+        <!-- Backend Panel -->
+        <div id="backendPanel" class="hidden flex flex-col gap-6">
+            <h2 class="text-2xl font-black text-gray-800 flex items-center gap-3 mb-2">
+                <i class="fa-solid fa-gear text-gray-500"></i>
+                後台設定管理
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- 自訂選單管理 -->
+                <section class="card p-5 col-span-1 md:col-span-3">
+                    <h3 class="text-lg font-bold text-indigo-600 mb-4 border-b pb-2"><i class="fa-solid fa-tags"></i> 自訂下拉選單管理</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- 任務選單 -->
+                        <div class="bg-gray-50 rounded-xl p-4 border">
+                            <h4 class="font-bold text-gray-700 mb-3 text-sm">任務與提醒</h4>
+                            <div id="manageTasksCats" class="flex flex-col gap-2"></div>
+                        </div>
+                        <!-- 作業選單 -->
+                        <div class="bg-gray-50 rounded-xl p-4 border">
+                            <h4 class="font-bold text-gray-700 mb-3 text-sm">作業處理追蹤</h4>
+                            <div id="manageHwCats" class="flex flex-col gap-2"></div>
+                        </div>
+                        <!-- 表現選單 -->
+                        <div class="bg-gray-50 rounded-xl p-4 border">
+                            <h4 class="font-bold text-gray-700 mb-3 text-sm">學生表現紀錄</h4>
+                            <div id="managePerfCats" class="flex flex-col gap-2"></div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- 行為異常事件紀錄簿 -->
+                <section class="card p-5 col-span-1 md:col-span-3">
+                    <h3 class="text-lg font-bold text-rose-600 mb-4 border-b pb-2 flex justify-between items-center">
+                        <span><i class="fa-solid fa-book-medical"></i> 學生行為事件紀錄簿</span>
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm whitespace-nowrap">
+                            <thead class="bg-rose-50 text-rose-800">
+                                <tr>
+                                    <th class="p-3 rounded-tl-lg font-bold">日期</th>
+                                    <th class="p-3 font-bold">學生姓名</th>
+                                    <th class="p-3 font-bold">事件分類</th>
+                                    <th class="p-3 font-bold max-w-[150px]">具體事項</th>
+                                    <th class="p-3 font-bold max-w-[200px]">處理過程</th>
+                                    <th class="p-3 font-bold max-w-[150px]">家長/行政聯繫</th>
+                                    <th class="p-3 font-bold max-w-[150px]">其它補充</th>
+                                    <th class="p-3 rounded-tr-lg font-bold text-center">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="incidentLogTable" class="divide-y">
+                                <!-- Populated via JS -->
+                            </tbody>
+                        </table>
+                        <div id="incidentLogEmpty" class="text-center py-8 text-gray-400 hidden">
+                            <i class="fa-solid fa-folder-open text-3xl mb-2 opacity-50"></i>
+                            <p>目前沒有任何事件紀錄</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+
     </div>
 
     <!-- Student Selection Modal -->
@@ -207,6 +276,60 @@
             <div class="p-4 border-t flex justify-end gap-3 bg-white rounded-b-2xl">
                 <button onclick="closeStudentModal()" class="px-5 py-2 rounded-xl text-gray-600 font-bold hover:bg-gray-100 transition-colors">取消</button>
                 <button onclick="confirmStudentSelection()" class="px-5 py-2 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-colors shadow-md">確認送出紀錄</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Incident Form Modal -->
+    <div id="incidentModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="bg-rose-600 p-4 text-white flex justify-between items-center">
+                <h3 class="font-black text-lg flex items-center gap-2"><i class="fa-solid fa-book-medical"></i> 建立學生行為事件紀錄</h3>
+                <button onclick="closeIncidentModal()" class="text-rose-200 hover:text-white transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto flex-1 space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">發生日期</label>
+                        <input type="date" id="incDate" class="w-full p-2 border rounded-lg bg-gray-50 text-sm focus:outline-rose-300" readonly>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">學生姓名</label>
+                        <input type="text" id="incStudent" class="w-full p-2 border rounded-lg bg-gray-50 text-sm focus:outline-rose-300" readonly>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">事件分類</label>
+                        <input type="text" id="incCategory" class="w-full p-2 border rounded-lg bg-rose-50 text-rose-700 font-bold text-sm" readonly>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">具體事項</label>
+                        <input type="text" id="incText" class="w-full p-2 border rounded-lg bg-gray-50 text-sm" readonly>
+                    </div>
+                </div>
+
+                <div class="pt-2 border-t">
+                    <label class="block text-xs font-bold text-rose-600 mb-1">處理過程 (必填)</label>
+                    <textarea id="incProcess" rows="3" placeholder="請描述您當下的處置方式..." class="w-full p-2 border rounded-lg text-sm focus:outline-rose-300"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-indigo-600 mb-1">與家長/行政聯繫狀況</label>
+                    <textarea id="incContact" rows="2" placeholder="是否有聯絡家長或知會行政單位？" class="w-full p-2 border rounded-lg text-sm focus:outline-indigo-300"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">其它補充</label>
+                    <textarea id="incNote" rows="2" placeholder="其它需記錄的細節..." class="w-full p-2 border rounded-lg text-sm focus:outline-gray-300"></textarea>
+                </div>
+            </div>
+            
+            <div class="p-4 border-t flex justify-end gap-3 bg-gray-50">
+                <button onclick="closeIncidentModal()" class="px-5 py-2 rounded-xl text-gray-600 font-bold hover:bg-gray-200 transition-colors">取消</button>
+                <button onclick="saveIncidentForm()" class="px-5 py-2 rounded-xl bg-rose-600 text-white font-bold hover:bg-rose-700 transition-colors shadow-md">儲存紀錄</button>
             </div>
         </div>
     </div>
@@ -282,59 +405,52 @@
             // Ensure current class structure exists
             if (!assistantData[currentClassId]) {
                 assistantData[currentClassId] = { events: [] };
-            }
+            if (!assistantData[currentClassId]) assistantData[currentClassId] = { events: [], incidents: [] };
 
-            // Setup UI
             setupClassSelector();
             renderCategorySelects();
+            renderBackendCats();
             document.getElementById('dateSelector').value = currentDate;
             document.getElementById('eventDate').value = currentDate;
             
-            // Event Listeners
-            document.getElementById('dateSelector').addEventListener('change', (e) => {
-                currentDate = e.target.value;
-                renderAll();
-            });
-            document.getElementById('classSelector').addEventListener('change', (e) => {
-                currentClassId = e.target.value;
-                renderAll();
-            });
-
-            // Enter key bindings
-            document.getElementById('taskContent').addEventListener('keypress', e => e.key === 'Enter' && addTask());
-            document.getElementById('hwContent').addEventListener('keypress', e => e.key === 'Enter' && document.querySelector(`button[onclick="openStudentModal('hw')"]`).click());
-            document.getElementById('perfContent').addEventListener('keypress', e => e.key === 'Enter' && document.querySelector(`button[onclick="openStudentModal('perf')"]`).click());
-            document.getElementById('eventContent').addEventListener('keypress', e => e.key === 'Enter' && addEvent());
-
             renderAll();
         }
 
-        function saveData() {
-            localStorage.setItem('classAssistantData', JSON.stringify(assistantData));
+        // --- Panel Navigation ---
+        function showPanel(panelName) {
+            document.getElementById('mainPanel').classList.toggle('hidden', panelName !== 'main');
+            document.getElementById('backendPanel').classList.toggle('hidden', panelName !== 'backend');
+            
+            const tabMain = document.getElementById('tabMain');
+            const tabBackend = document.getElementById('tabBackend');
+            
+            if (panelName === 'main') {
+                tabMain.className = "px-4 py-2 rounded-xl font-bold bg-emerald-600 text-white shadow-md transition-all";
+                tabBackend.className = "px-4 py-2 rounded-xl font-bold bg-white text-gray-600 border hover:bg-gray-50 transition-all";
+                renderAll();
+            } else {
+                tabMain.className = "px-4 py-2 rounded-xl font-bold bg-white text-gray-600 border hover:bg-gray-50 transition-all";
+                tabBackend.className = "px-4 py-2 rounded-xl font-bold bg-emerald-600 text-white shadow-md transition-all";
+                renderBackendCats();
+                renderIncidentLogs();
+            }
         }
+
+        function saveData() { localStorage.setItem('classAssistantData', JSON.stringify(assistantData)); }
 
         function getCurrentClass() {
             let cls = classesData.classes.find(c => c.id === currentClassId);
-            if (!cls && classesData.classes.length > 0) {
-                cls = classesData.classes[0];
-                currentClassId = cls.id;
-            }
-            return cls;
+            return cls || classesData.classes[0];
         }
 
         function getDailyData() {
-            if (!assistantData[currentClassId]) assistantData[currentClassId] = { events: [] };
+            if (!assistantData[currentClassId]) assistantData[currentClassId] = { events: [], incidents: [] };
             if (!assistantData[currentClassId][currentDate]) {
                 assistantData[currentClassId][currentDate] = { tasks: [], hw: [], perf: [] };
             }
-            const data = assistantData[currentClassId][currentDate];
-            if (!data.tasks) data.tasks = [];
-            if (!data.hw) data.hw = [];
-            if (!data.perf) data.perf = [];
-            return data;
+            return assistantData[currentClassId][currentDate];
         }
 
-        // --- Category Management ---
         const DEFAULT_CATS = {
             tasks: ['聯絡本', '本日任務', '這節任務'],
             hw: ['缺交', '未訂正', '未帶'],
@@ -351,7 +467,46 @@
             if (!assistantData.customCats[type].includes(cat)) {
                 assistantData.customCats[type].push(cat);
                 saveData();
+                renderBackendCats();
             }
+        }
+
+        function deleteCustomCat(type, cat) {
+            if (!assistantData.customCats) return;
+            assistantData.customCats[type] = assistantData.customCats[type].filter(c => c !== cat);
+            saveData();
+            renderCategorySelects();
+            renderBackendCats();
+        }
+
+        function renderBackendCats() {
+            const types = [
+                { id: 'tasks', domId: 'manageTasksCats' },
+                { id: 'hw', domId: 'manageHwCats' },
+                { id: 'perf', domId: 'managePerfCats' }
+            ];
+            
+            types.forEach(t => {
+                const container = document.getElementById(t.domId);
+                if (!container) return;
+                container.innerHTML = '';
+                
+                const customs = getCustomCats(t.id);
+                if (customs.length === 0) {
+                    container.innerHTML = '<span class="text-xs text-gray-400">尚無自訂分類</span>';
+                    return;
+                }
+                
+                customs.forEach(cat => {
+                    const div = document.createElement('div');
+                    div.className = 'flex justify-between items-center bg-white border px-3 py-1.5 rounded-lg text-sm';
+                    div.innerHTML = `
+                        <span class="font-bold text-gray-700">${cat}</span>
+                        <button onclick="deleteCustomCat('${t.id}', '${cat}')" class="text-gray-400 hover:text-red-500 transition-colors"><i class="fa-solid fa-trash"></i></button>
+                    `;
+                    container.appendChild(div);
+                });
+            });
         }
 
         function renderCategorySelects() {
@@ -362,21 +517,18 @@
                 const currentVal = sel.value;
                 sel.innerHTML = '';
                 
-                // Defaults
                 DEFAULT_CATS[type].forEach(cat => {
                     const opt = document.createElement('option');
                     opt.value = cat; opt.textContent = cat;
                     sel.appendChild(opt);
                 });
                 
-                // Customs
                 getCustomCats(type).forEach(cat => {
                     const opt = document.createElement('option');
                     opt.value = cat; opt.textContent = cat;
                     sel.appendChild(opt);
                 });
                 
-                // Add New option
                 const optNew = document.createElement('option');
                 optNew.value = '__NEW__';
                 optNew.textContent = '➕ 新增自訂分類...';
@@ -393,11 +545,8 @@
                 Swal.fire({
                     title: '新增自訂分類',
                     input: 'text',
-                    inputPlaceholder: '請輸入新的分類名稱',
                     showCancelButton: true,
-                    confirmButtonColor: '#4f46e5',
-                    confirmButtonText: '新增',
-                    cancelButtonText: '取消'
+                    confirmButtonText: '新增'
                 }).then(result => {
                     if (result.isConfirmed && result.value.trim()) {
                         const newCat = result.value.trim();
@@ -423,26 +572,19 @@
             });
         }
 
-        // --- Modal Logic ---
         function openStudentModal(context) {
-            // Check if content is entered
             const inputId = context === 'hw' ? 'hwContent' : 'perfContent';
             const content = document.getElementById(inputId).value.trim();
             if (!content) {
                 Swal.fire({ icon: 'warning', title: '請先輸入事項名稱！', timer: 1500, showConfirmButton: false });
-                document.getElementById(inputId).focus();
                 return;
             }
 
             currentModalContext = context;
             const cls = getCurrentClass();
-            if(!cls) return;
-            
-            // Populate grid
             const grid = document.getElementById('modalStudentGrid');
             grid.innerHTML = '';
             
-            // Use existing pending selection or empty
             selectedStudentsTmp = new Set(pendingSelections[context].map(s => s.id));
 
             cls.participants.forEach(p => {
@@ -458,9 +600,7 @@
             document.getElementById('studentModal').classList.remove('hidden');
         }
 
-        function closeStudentModal() {
-            document.getElementById('studentModal').classList.add('hidden');
-        }
+        function closeStudentModal() { document.getElementById('studentModal').classList.add('hidden'); }
 
         function toggleStudentSelection(id, name, element) {
             if (selectedStudentsTmp.has(id)) {
@@ -471,39 +611,25 @@
                 element.className = 'cursor-pointer p-2 rounded-xl text-center border-2 transition-all font-bold bg-indigo-100 border-indigo-500 text-indigo-700';
             }
         }
-
-        function toggleStudentSelection(id, name, element) {
-            if (selectedStudentsTmp.has(id)) {
-                selectedStudentsTmp.delete(id);
-                element.className = 'cursor-pointer p-2 rounded-xl text-center border-2 transition-all font-bold bg-white border-gray-200 text-gray-600 hover:border-indigo-300';
-            } else {
-                selectedStudentsTmp.add(id);
-                element.className = 'cursor-pointer p-2 rounded-xl text-center border-2 transition-all font-bold bg-indigo-100 border-indigo-500 text-indigo-700';
-            }
-        }
-
-
 
         function confirmStudentSelection() {
             const cls = getCurrentClass();
-            if(!cls) return;
             const selectedArr = cls.participants.filter(p => selectedStudentsTmp.has(p.id)).map(p => ({id: p.id, name: p.name}));
             
-            if (selectedArr.length === 0) {
-                closeStudentModal();
-                return;
+            if (selectedArr.length > 0) {
+                pendingSelections[currentModalContext] = selectedArr;
+                const pEl = document.getElementById(`${currentModalContext}PendingStudents`);
+                const lEl = document.getElementById(`${currentModalContext}PendingList`);
+                const bEl = document.getElementById(`${currentModalContext}AddBtn`);
+                
+                if (lEl) lEl.innerHTML = selectedArr.map(s => `<span class="student-pill">${s.name}</span>`).join('');
+                if (pEl) pEl.classList.remove('hidden');
+                if (bEl) bEl.classList.remove('hidden');
             }
-            
-            pendingSelections[currentModalContext] = selectedArr;
-            selectedStudentsTmp.clear(); // Reset immediately
-            
+            selectedStudentsTmp.clear();
             closeStudentModal();
-            
-            if (currentModalContext === 'hw') addHomework();
-            else if (currentModalContext === 'perf') addPerformance();
         }
 
-        // --- Data Operations & Rendering ---
         function uuid() { return Math.random().toString(36).substr(2, 9); }
 
         function renderAll() {
@@ -511,28 +637,6 @@
             renderHW();
             renderPerf();
             renderEvents();
-            
-            // Reset pendings
-            ['hw', 'perf'].forEach(ctx => {
-                pendingSelections[ctx] = [];
-                const pEl = document.getElementById(`${ctx}PendingStudents`);
-                const bEl = document.getElementById(`${ctx}AddBtn`);
-                if(pEl) pEl.classList.add('hidden');
-                if(bEl) bEl.classList.add('hidden');
-            });
-        }
-
-        // Tasks
-        function addTask() {
-            const input = document.getElementById('taskContent');
-            const type = document.getElementById('taskType').value;
-            const text = input.value.trim();
-            if (!text) return;
-            
-            const data = getDailyData();
-            data.tasks.push({ id: uuid(), type, text, done: false });
-            saveData();
-            renderTasks();
         }
 
         function renderTasks() {
@@ -540,13 +644,6 @@
             list.innerHTML = '';
             const tasks = getDailyData().tasks || [];
             
-            const typeColors = {
-                '聯絡本': 'bg-blue-100 text-blue-700 border-blue-200',
-                '本日任務': 'bg-amber-100 text-amber-700 border-amber-200',
-                '這節任務': 'bg-rose-100 text-rose-700 border-rose-200'
-            };
-
-            // Group tasks by type
             const grouped = tasks.reduce((acc, t) => {
                 if(!acc[t.type]) acc[t.type] = [];
                 acc[t.type].push(t);
@@ -557,26 +654,15 @@
                 const groupEl = document.createElement('div');
                 groupEl.className = `mb-3 bg-white rounded-xl border overflow-hidden shadow-sm`;
                 
-                const headerStyle = typeColors[type] || 'bg-gray-100 text-gray-700 border-gray-200';
-                
                 let tasksHtml = typeTasks.map(t => `
-                    <div class="flex items-start gap-3 p-3 border-b last:border-0 ${t.done ? 'bg-gray-50 opacity-60' : ''} hover:bg-gray-50 transition-colors">
+                    <div class="flex items-start gap-3 p-3 border-b ${t.done ? 'bg-gray-50 opacity-60' : ''}">
                         <input type="checkbox" class="checkbox-custom mt-0.5" ${t.done ? 'checked' : ''} onchange="toggleTask('${t.id}')">
-                        <div class="flex-1">
-                            <p class="text-sm font-semibold mt-0.5 ${t.done ? 'line-through text-gray-500' : 'text-gray-800'}">${t.text}</p>
-                        </div>
+                        <div class="flex-1"><p class="text-sm font-semibold ${t.done ? 'line-through' : ''}">${t.text}</p></div>
                         <i class="fa-solid fa-trash btn-delete mt-1" onclick="deleteTask('${t.id}')"></i>
                     </div>
                 `).join('');
 
-                groupEl.innerHTML = `
-                    <div class="${headerStyle} px-3 py-1.5 font-bold text-xs border-b">
-                        <i class="fa-solid fa-caret-down mr-1"></i> ${type}
-                    </div>
-                    <div class="flex flex-col">
-                        ${tasksHtml}
-                    </div>
-                `;
+                groupEl.innerHTML = `<div class="bg-gray-100 px-3 py-1.5 font-bold text-xs border-b">${type}</div><div class="flex flex-col">${tasksHtml}</div>`;
                 list.appendChild(groupEl);
             }
         }
@@ -584,12 +670,9 @@
         function toggleTask(id) {
             const data = getDailyData();
             const t = data.tasks.find(x => x.id === id);
-            if(t) {
-                t.done = !t.done;
-                saveData();
-                renderTasks();
-            }
+            if(t) { t.done = !t.done; saveData(); renderTasks(); }
         }
+
         function deleteTask(id) {
             const data = getDailyData();
             data.tasks = data.tasks.filter(x => x.id !== id);
@@ -597,7 +680,6 @@
             renderTasks();
         }
 
-        // Homework
         function addHomework() {
             const input = document.getElementById('hwContent');
             const category = document.getElementById('hwCategory').value;
@@ -617,6 +699,7 @@
             renderHW();
         }
 
+        function renderHW() {
             const list = document.getElementById('hwList');
             list.innerHTML = '';
             const hws = getDailyData().hw || [];
@@ -656,18 +739,13 @@
                 `;
                 list.appendChild(groupEl);
             }
+        }
 
         function deleteHW(id) {
             const data = getDailyData();
             data.hw = data.hw.filter(x => x.id !== id);
             saveData();
             renderHW();
-        }
-
-        // Performance
-        function updatePerfColor(selectEl) {
-            const color = selectEl.options[selectEl.selectedIndex].dataset.color;
-            selectEl.className = `p-2 border rounded-lg bg-gray-50 text-sm font-semibold w-28 shrink-0 ${color}`;
         }
 
         function addPerformance() {
