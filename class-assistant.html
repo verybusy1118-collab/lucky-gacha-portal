@@ -639,6 +639,19 @@
             renderEvents();
         }
 
+        function addTask() {
+            const input = document.getElementById('taskContent');
+            const type = document.getElementById('taskType').value;
+            const text = input.value.trim();
+            if (!text) return;
+            
+            const data = getDailyData();
+            data.tasks.push({ id: uuid(), type, text, done: false });
+            saveData();
+            renderTasks();
+            input.value = '';
+        }
+
         function renderTasks() {
             const list = document.getElementById('taskList');
             list.innerHTML = '';
@@ -764,6 +777,25 @@
             if(pEl) pEl.classList.add('hidden');
             if(bEl) bEl.classList.add('hidden');
             renderPerf();
+            
+            // Trigger Incident Logging Prompt
+            if (category === '要加油' || category.includes('異常') || category.includes('偏差') || category.includes('警告')) {
+                const studentNames = students.map(s => s.name).join(', ');
+                Swal.fire({
+                    title: '是否將此事件記錄至後台？',
+                    text: `偵測到「${category}」表現，建議詳細記錄處理過程。`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#e11d48',
+                    cancelButtonColor: '#9ca3af',
+                    confirmButtonText: '是的，填寫事件紀錄',
+                    cancelButtonText: '不用了'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        openIncidentModal(studentNames, category, text);
+                    }
+                });
+            }
         }
 
         function renderPerf() {
