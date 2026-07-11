@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -391,27 +391,12 @@
             
             pendingSelections[currentModalContext] = selectedArr;
             
-            // Update preview UI
-            const previewContainer = document.getElementById(`${currentModalContext}PendingStudents`);
-            const previewList = document.getElementById(`${currentModalContext}PendingList`);
-            const addBtn = document.getElementById(`${currentModalContext}AddBtn`);
+            closeStudentModal();
             
             if (selectedArr.length > 0) {
-                previewContainer.classList.remove('hidden');
-                addBtn.classList.remove('hidden');
-                previewList.innerHTML = '';
-                selectedArr.forEach(s => {
-                    const pill = document.createElement('span');
-                    pill.className = 'student-pill';
-                    pill.textContent = s.name;
-                    previewList.appendChild(pill);
-                });
-            } else {
-                previewContainer.classList.add('hidden');
-                addBtn.classList.add('hidden');
+                if (currentModalContext === 'hw') addHomework();
+                else if (currentModalContext === 'perf') addPerformance();
             }
-            
-            closeStudentModal();
         }
 
         // --- Data Operations & Rendering ---
@@ -426,8 +411,10 @@
             // Reset pendings
             ['hw', 'perf'].forEach(ctx => {
                 pendingSelections[ctx] = [];
-                document.getElementById(`${ctx}PendingStudents`).classList.add('hidden');
-                document.getElementById(`${ctx}AddBtn`).classList.add('hidden');
+                const pEl = document.getElementById(`${ctx}PendingStudents`);
+                const bEl = document.getElementById(`${ctx}AddBtn`);
+                if(pEl) pEl.classList.add('hidden');
+                if(bEl) bEl.classList.add('hidden');
                 document.getElementById(`${ctx}Content`).value = '';
             });
         }
@@ -452,26 +439,45 @@
             const tasks = getDailyData().tasks || [];
             
             const typeColors = {
-                '聯絡本': 'bg-blue-100 text-blue-700',
-                '本日任務': 'bg-amber-100 text-amber-700',
-                '這節任務': 'bg-rose-100 text-rose-700',
-                '自訂說明': 'bg-gray-200 text-gray-700'
+                '聯絡本': 'bg-blue-100 text-blue-700 border-blue-200',
+                '本日任務': 'bg-amber-100 text-amber-700 border-amber-200',
+                '這節任務': 'bg-rose-100 text-rose-700 border-rose-200',
+                '自訂說明': 'bg-gray-200 text-gray-700 border-gray-300'
             };
 
-            tasks.forEach(t => {
-                const el = document.createElement('div');
-                el.className = `flex items-start gap-3 p-3 rounded-xl border ${t.done ? 'bg-gray-50 opacity-60' : 'bg-white shadow-sm'}`;
+            // Group tasks by type
+            const grouped = tasks.reduce((acc, t) => {
+                if(!acc[t.type]) acc[t.type] = [];
+                acc[t.type].push(t);
+                return acc;
+            }, {});
+
+            for (const [type, typeTasks] of Object.entries(grouped)) {
+                const groupEl = document.createElement('div');
+                groupEl.className = `mb-3 bg-white rounded-xl border overflow-hidden shadow-sm`;
                 
-                el.innerHTML = `
-                    <input type="checkbox" class="checkbox-custom mt-0.5" ${t.done ? 'checked' : ''} onchange="toggleTask('${t.id}')">
-                    <div class="flex-1">
-                        <span class="text-[0.65rem] font-bold px-2 py-0.5 rounded-md ${typeColors[t.type] || 'bg-gray-100'}">${t.type}</span>
-                        <p class="text-sm font-semibold mt-1 ${t.done ? 'line-through text-gray-500' : 'text-gray-800'}">${t.text}</p>
+                const headerStyle = typeColors[type] || 'bg-gray-100 text-gray-700 border-gray-200';
+                
+                let tasksHtml = typeTasks.map(t => `
+                    <div class="flex items-start gap-3 p-3 border-b last:border-0 ${t.done ? 'bg-gray-50 opacity-60' : ''} hover:bg-gray-50 transition-colors">
+                        <input type="checkbox" class="checkbox-custom mt-0.5" ${t.done ? 'checked' : ''} onchange="toggleTask('${t.id}')">
+                        <div class="flex-1">
+                            <p class="text-sm font-semibold mt-0.5 ${t.done ? 'line-through text-gray-500' : 'text-gray-800'}">${t.text}</p>
+                        </div>
+                        <i class="fa-solid fa-trash btn-delete mt-1" onclick="deleteTask('${t.id}')"></i>
                     </div>
-                    <i class="fa-solid fa-trash btn-delete mt-1" onclick="deleteTask('${t.id}')"></i>
+                `).join('');
+
+                groupEl.innerHTML = `
+                    <div class="${headerStyle} px-3 py-1.5 font-bold text-xs border-b">
+                        <i class="fa-solid fa-caret-down mr-1"></i> ${type}
+                    </div>
+                    <div class="flex flex-col">
+                        ${tasksHtml}
+                    </div>
                 `;
-                list.appendChild(el);
-            });
+                list.appendChild(groupEl);
+            }
         }
 
         function toggleTask(id) {
@@ -504,8 +510,10 @@
             
             input.value = '';
             pendingSelections.hw = [];
-            document.getElementById('hwPendingStudents').classList.add('hidden');
-            document.getElementById('hwAddBtn').classList.add('hidden');
+            const pEl = document.getElementById('hwPendingStudents');
+            const bEl = document.getElementById('hwAddBtn');
+            if(pEl) pEl.classList.add('hidden');
+            if(bEl) bEl.classList.add('hidden');
             renderHW();
         }
 
@@ -562,8 +570,10 @@
             
             input.value = '';
             pendingSelections.perf = [];
-            document.getElementById('perfPendingStudents').classList.add('hidden');
-            document.getElementById('perfAddBtn').classList.add('hidden');
+            const pEl = document.getElementById('perfPendingStudents');
+            const bEl = document.getElementById('perfAddBtn');
+            if(pEl) pEl.classList.add('hidden');
+            if(bEl) bEl.classList.add('hidden');
             renderPerf();
         }
 
