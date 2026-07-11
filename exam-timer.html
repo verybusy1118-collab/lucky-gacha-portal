@@ -489,6 +489,18 @@
             }
 
             const endDate = getExamTimeDate(activeSub.endTime, nowDate);
+            const startDate = getExamTimeDate(activeSub.startTime, nowDate);
+            
+            if (nowDate.getTime() < startDate.getTime()) {
+                if (remainingEl.textContent !== '尚未開始') {
+                    remainingEl.textContent = '尚未開始';
+                    remainingEl.className = 'text-6xl md:text-7xl font-bold tracking-widest text-gray-400 mb-2 md:mb-4';
+                    reminderEl.classList.add('hidden');
+                }
+                lastSeconds = -1;
+                return;
+            }
+
             let diffMs = endDate.getTime() - nowDate.getTime();
 
             if (diffMs < -1000) {
