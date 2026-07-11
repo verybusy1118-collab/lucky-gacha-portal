@@ -281,6 +281,28 @@
         </div>
     </div>
 
+    <!-- Task Progress Modal -->
+    <div id="taskProgressModal" class="fixed inset-0 bg-black/50 z-50 hidden flex justify-center items-center backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl animate-[fadeIn_0.2s_ease-out]">
+            <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-2xl">
+                <div>
+                    <h3 class="text-lg font-bold text-gray-800">檢核進度 <span id="taskProgressInfo" class="text-sm font-normal text-gray-500 ml-2"></span></h3>
+                    <p id="taskProgressStats" class="text-sm text-indigo-600 font-bold mt-1">進度：0 / 0 人</p>
+                </div>
+                <button onclick="closeTaskProgressModal()" class="text-gray-400 hover:text-gray-700 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+
+            <!-- Student Grid -->
+            <div id="taskProgressGrid" class="p-4 flex-1 overflow-y-auto grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 bg-gray-50/50">
+                <!-- Populated via JS -->
+            </div>
+
+            <div class="p-4 border-t flex justify-end bg-white rounded-b-2xl">
+                <button onclick="closeTaskProgressModal()" class="px-5 py-2 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-colors shadow-md">完成檢核</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Incident Form Modal -->
     <div id="incidentModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden p-4 backdrop-blur-sm">
         <div class="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
@@ -653,7 +675,7 @@
             if (!text) return;
             
             const data = getDailyData();
-            data.tasks.push({ id: uuid(), type, text, done: false });
+            data.tasks.push({ id: uuid(), type, text, done: false, completedStudents: [] });
             saveData();
             renderTasks();
             input.value = '';
@@ -674,13 +696,19 @@
                 const groupEl = document.createElement('div');
                 groupEl.className = `mb-3 bg-white rounded-xl border overflow-hidden shadow-sm`;
                 
-                let tasksHtml = typeTasks.map(t => `
+                const totalStudents = getCurrentClass().participants.filter(p => p.active).length;
+                let tasksHtml = typeTasks.map(t => {
+                    const compCount = (t.completedStudents || []).length;
+                    return `
                     <div class="flex items-start gap-3 p-3 border-b ${t.done ? 'bg-gray-50 opacity-60' : ''}">
                         <input type="checkbox" class="checkbox-custom mt-0.5" ${t.done ? 'checked' : ''} onchange="toggleTask('${t.id}')">
                         <div class="flex-1"><p class="text-sm font-semibold ${t.done ? 'line-through' : ''}">${t.text}</p></div>
-                        <i class="fa-solid fa-trash btn-delete mt-1" onclick="deleteTask('${t.id}')"></i>
+                        <button onclick="openTaskProgressModal('${t.id}')" class="px-2 py-1 bg-indigo-50 text-indigo-600 rounded text-xs font-bold hover:bg-indigo-100 transition-colors shrink-0">
+                            <i class="fa-solid fa-users-viewfinder"></i> 進度 (${compCount}/${totalStudents})
+                        </button>
+                        <i class="fa-solid fa-trash btn-delete mt-1 ml-1" onclick="deleteTask('${t.id}')"></i>
                     </div>
-                `).join('');
+                `}).join('');
 
                 groupEl.innerHTML = `<div class="bg-gray-100 px-3 py-1.5 font-bold text-xs border-b">${type}</div><div class="flex flex-col">${tasksHtml}</div>`;
                 list.appendChild(groupEl);
@@ -697,6 +725,64 @@
             const data = getDailyData();
             data.tasks = data.tasks.filter(x => x.id !== id);
             saveData();
+            renderTasks();
+        }
+
+        let currentTaskProgressId = null;
+
+        function openTaskProgressModal(taskId) {
+            currentTaskProgressId = taskId;
+            const data = getDailyData();
+            const t = data.tasks.find(x => x.id === taskId);
+            if(!t) return;
+            
+            const completed = new Set(t.completedStudents || []);
+            const cls = getCurrentClass();
+            const grid = document.getElementById('taskProgressGrid');
+            grid.innerHTML = '';
+            
+            let activeCount = 0;
+            cls.participants.forEach(p => {
+                if(!p.active) return;
+                activeCount++;
+                const btn = document.createElement('div');
+                const isCompleted = completed.has(p.id);
+                btn.className = `cursor-pointer p-2 rounded-xl text-center border-2 transition-all font-bold ${isCompleted ? 'bg-emerald-100 border-emerald-500 text-emerald-700' : 'bg-white border-gray-200 text-gray-500 hover:border-emerald-300'}`;
+                btn.textContent = p.name;
+                btn.onclick = () => toggleTaskStudent(taskId, p.id, btn);
+                grid.appendChild(btn);
+            });
+            
+            document.getElementById('taskProgressInfo').textContent = `- ${t.text}`;
+            document.getElementById('taskProgressStats').textContent = `進度：${completed.size} / ${activeCount} 人`;
+            
+            document.getElementById('taskProgressModal').classList.remove('hidden');
+        }
+
+        function toggleTaskStudent(taskId, studentId, element) {
+            const data = getDailyData();
+            const t = data.tasks.find(x => x.id === taskId);
+            if(!t) return;
+            
+            if(!t.completedStudents) t.completedStudents = [];
+            
+            const idx = t.completedStudents.indexOf(studentId);
+            if(idx > -1) {
+                t.completedStudents.splice(idx, 1);
+                element.className = 'cursor-pointer p-2 rounded-xl text-center border-2 transition-all font-bold bg-white border-gray-200 text-gray-500 hover:border-emerald-300';
+            } else {
+                t.completedStudents.push(studentId);
+                element.className = 'cursor-pointer p-2 rounded-xl text-center border-2 transition-all font-bold bg-emerald-100 border-emerald-500 text-emerald-700';
+            }
+            saveData();
+            
+            const cls = getCurrentClass();
+            const activeCount = cls.participants.filter(p => p.active).length;
+            document.getElementById('taskProgressStats').textContent = `進度：${t.completedStudents.length} / ${activeCount} 人`;
+        }
+
+        function closeTaskProgressModal() {
+            document.getElementById('taskProgressModal').classList.add('hidden');
             renderTasks();
         }
 
