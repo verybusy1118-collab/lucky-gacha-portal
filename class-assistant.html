@@ -1421,9 +1421,11 @@
                                 </div>
                             </div>
                             <div class="flex justify-end gap-2 mt-4 pt-3 border-t border-indigo-200/50">
+                                <button onclick="addGroupPoints('${g.id}', -5)" class="w-8 h-8 rounded-full bg-white text-rose-500 hover:bg-rose-50 border border-rose-200 font-bold shadow-sm">-5</button>
                                 <button onclick="addGroupPoints('${g.id}', -1)" class="w-8 h-8 rounded-full bg-white text-rose-500 hover:bg-rose-50 border border-rose-200 font-bold shadow-sm">-1</button>
                                 <button onclick="addGroupPoints('${g.id}', 1)" class="w-8 h-8 rounded-full bg-white text-emerald-500 hover:bg-emerald-50 border border-emerald-200 font-bold shadow-sm">+1</button>
                                 <button onclick="addGroupPoints('${g.id}', 5)" class="w-8 h-8 rounded-full bg-white text-emerald-500 hover:bg-emerald-50 border border-emerald-200 font-bold shadow-sm">+5</button>
+                                <button onclick="resetGroupPoints('${g.id}')" class="w-auto px-2 h-8 rounded-full bg-white text-gray-500 hover:bg-gray-50 border border-gray-200 font-bold shadow-sm text-xs">歸零</button>
                             </div>
                         </div>
                     `;
@@ -1438,7 +1440,7 @@
             const sortedParticipants = [...participants].sort((a,b) => (b.points || 0) - (a.points || 0));
             
             sortedParticipants.forEach((p, idx) => {
-                if(!p.active) return;
+                if(p.active === false) return;
                 const points = p.points || 0;
                 let rankClass = "bg-gray-50 border-gray-200 text-gray-700";
                 if (idx === 0 && points > 0) rankClass = "bg-yellow-50 border-yellow-300 text-yellow-700 ring-2 ring-yellow-400 shadow-sm";
@@ -1477,7 +1479,7 @@
             list.innerHTML = '';
             
             groups.forEach(g => {
-                let memberBtns = participants.filter(p => p.active).map(p => {
+                let memberBtns = participants.filter(p => p.active !== false).map(p => {
                     const isMember = g.members && g.members.includes(p.id);
                     return `
                         <button onclick="toggleGroupStudent('${g.id}', '${p.id}')" 
@@ -1561,6 +1563,15 @@
             if (!group) return;
             if (group.points === undefined) group.points = 0;
             group.points += delta;
+            saveClassesData();
+            renderLeaderboard();
+        }
+
+        function resetGroupPoints(groupId) {
+            const cls = getCurrentClass();
+            const group = cls.groups.find(g => g.id === groupId);
+            if (!group) return;
+            group.points = 0;
             saveClassesData();
             renderLeaderboard();
         }
