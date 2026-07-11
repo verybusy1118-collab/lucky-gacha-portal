@@ -25,7 +25,6 @@
             font-weight: bold;
         }
 
-        /* 顏色過渡效果 (不閃爍) */
         .time-display {
             transition: color 1s ease;
         }
@@ -40,7 +39,7 @@
             cursor: pointer;
         }
         .schedule-item.active {
-            background-color: #1e40af; /* blue-800 */
+            background-color: #1e40af;
             color: white;
             border-color: #1e40af;
             transform: scale(1.05);
@@ -74,6 +73,14 @@
             background: white;
             transform: rotate(90deg);
         }
+
+        .bounce-animation {
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
     </style>
 </head>
 <body class="p-4 md:p-8 flex flex-col h-screen overflow-hidden">
@@ -97,6 +104,7 @@
             
             <div class="text-center mb-2">
                 <h1 id="display-subject" class="text-5xl md:text-6xl font-extrabold tracking-widest text-blue-900 drop-shadow-sm">尚未選擇科目</h1>
+                <div id="subject-time-range" class="text-2xl font-bold text-gray-600 mt-3">--:-- ~ --:--</div>
             </div>
 
             <!-- 現在時間 -->
@@ -108,10 +116,14 @@
             <div class="h-1 w-full bg-gray-300 rounded-full my-2"></div>
 
             <!-- 剩餘時間 -->
-            <div class="text-center flex-grow flex flex-col justify-center">
+            <div class="text-center flex-grow flex flex-col justify-center relative">
                 <h2 class="text-3xl font-bold text-gray-700 mb-2">距離考試結束剩餘</h2>
                 <div id="remaining-time" class="text-7xl md:text-9xl clock-font tracking-tighter time-display color-normal">--:--</div>
-                <div id="end-time-display" class="text-2xl text-gray-500 mt-6 font-bold bg-white inline-block mx-auto px-6 py-2 rounded-full border-2 border-gray-200">結束時間：--:--</div>
+                
+                <!-- 大字幕提醒 (最後五分鐘/一分鐘) -->
+                <div id="large-reminder" class="absolute bottom-0 left-0 right-0 text-4xl md:text-5xl font-extrabold text-red-600 bounce-animation hidden opacity-90 pb-2">
+                    <i class="fa-solid fa-triangle-exclamation"></i> 距離結束只剩 <span id="reminder-min">5</span> 分鐘！
+                </div>
             </div>
         </div>
 
@@ -168,6 +180,14 @@
                     <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
                         <h3 class="text-lg font-bold text-gray-800 mb-3 border-b pb-2"><i class="fa-solid fa-list-ol text-blue-500"></i> 考試科目排程設定</h3>
                         
+                        <!-- 標題列 -->
+                        <div class="flex text-xs text-gray-500 font-bold mb-2 pr-6">
+                            <div class="w-6"></div>
+                            <div class="flex-grow ml-2">科目名稱</div>
+                            <div class="w-20 text-center">開始時間</div>
+                            <div class="w-20 text-center">結束時間</div>
+                        </div>
+
                         <div id="setting-schedule-list" class="space-y-3 mb-4 max-h-[300px] overflow-y-auto pr-2">
                             <!-- JS 動態插入排程輸入框 -->
                         </div>
@@ -237,15 +257,15 @@
         // 資料結構
         let examData = {
             schedule: [
-                { id: '1', subject: '國語科 期中考', endTime: '09:00' },
-                { id: '2', subject: '數學科 期中考', endTime: '10:10' },
-                { id: '3', subject: '英文科 期中考', endTime: '11:20' }
+                { id: '1', subject: '國語科 期中考', startTime: '08:00', endTime: '09:00' },
+                { id: '2', subject: '數學科 期中考', startTime: '09:10', endTime: '10:10' },
+                { id: '3', subject: '英文科 期中考', startTime: '10:20', endTime: '11:20' }
             ],
             activeScheduleId: '1',
             stages: {
-                stage1: 10, // 綠色
-                stage2: 5,  // 橘色
-                stage3: 1   // 紅色
+                stage1: 10,
+                stage2: 5,
+                stage3: 1
             },
             expected: 30,
             actual: 30,
@@ -255,9 +275,8 @@
         // 供後台排程列表編輯用的暫存陣列
         let editingSchedule = [];
 
-        // 初始化
         document.addEventListener('DOMContentLoaded', () => {
-            const savedData = localStorage.getItem('examRemindersDataAdvanced');
+            const savedData = localStorage.getItem('examRemindersDataAdvanced2');
             if (savedData) {
                 try {
                     examData = { ...examData, ...JSON.parse(savedData) };
@@ -266,7 +285,6 @@
                 }
             }
 
-            // 確保有 active ID
             if (!examData.schedule.find(s => s.id === examData.activeScheduleId) && examData.schedule.length > 0) {
                 examData.activeScheduleId = examData.schedule[0].id;
             }
@@ -274,7 +292,6 @@
             updateDisplayFromData();
             startClock();
             
-            // 密碼 666
             let keyBuffer = '';
             document.addEventListener('keydown', (e) => {
                 if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
@@ -291,19 +308,18 @@
 
         function setActiveSubject(id) {
             examData.activeScheduleId = id;
-            localStorage.setItem('examRemindersDataAdvanced', JSON.stringify(examData));
+            localStorage.setItem('examRemindersDataAdvanced2', JSON.stringify(examData));
             updateDisplayFromData();
         }
 
         function updateDisplayFromData() {
-            // 渲染頂部排程表
             const scheduleContainer = document.getElementById('schedule-container');
             scheduleContainer.innerHTML = '';
             
             if (examData.schedule.length === 0) {
                 scheduleContainer.innerHTML = '<div class="text-gray-400 italic">尚未設定任何科目排程</div>';
                 document.getElementById('display-subject').textContent = '無科目設定';
-                document.getElementById('end-time-display').textContent = '結束時間：--:--';
+                document.getElementById('subject-time-range').textContent = '--:-- ~ --:--';
             }
 
             examData.schedule.forEach((item, index) => {
@@ -311,17 +327,16 @@
                 
                 const btn = document.createElement('div');
                 btn.className = `schedule-item px-5 py-2 rounded-xl border-2 font-bold text-lg flex items-center gap-2 whitespace-nowrap select-none ${isActive ? 'active' : 'border-gray-300 text-gray-600 bg-white'}`;
-                btn.innerHTML = `<span class="bg-black/10 px-2 py-0.5 rounded text-sm">${index+1}</span> ${item.subject} <span class="text-sm font-normal opacity-90">(${item.endTime})</span>`;
+                btn.innerHTML = `<span class="bg-black/10 px-2 py-0.5 rounded text-sm">${index+1}</span> ${item.subject} <span class="text-sm font-normal opacity-90">(${item.startTime}~${item.endTime})</span>`;
                 btn.onclick = () => setActiveSubject(item.id);
                 scheduleContainer.appendChild(btn);
 
                 if (isActive) {
                     document.getElementById('display-subject').textContent = item.subject;
-                    document.getElementById('end-time-display').textContent = `結束時間：${item.endTime}`;
+                    document.getElementById('subject-time-range').textContent = `${item.startTime} ~ ${item.endTime}`;
                 }
             });
 
-            // 人數
             const expected = parseInt(examData.expected) || 0;
             const actual = parseInt(examData.actual) || 0;
             const absent = Math.max(0, expected - actual);
@@ -331,7 +346,6 @@
             document.getElementById('count-absent').textContent = absent;
             document.getElementById('count-absent').className = absent > 0 ? "text-6xl font-extrabold text-red-600 mt-2" : "text-6xl font-extrabold text-gray-400 mt-2";
 
-            // 注意事項
             const notesList = document.getElementById('notes-list');
             notesList.innerHTML = '';
             if (examData.notes) {
@@ -360,11 +374,15 @@
 
         function updateTimer(nowDate = new Date()) {
             const remainingEl = document.getElementById('remaining-time');
+            const reminderEl = document.getElementById('large-reminder');
+            const reminderMinEl = document.getElementById('reminder-min');
+            
             const activeSub = examData.schedule.find(s => s.id === examData.activeScheduleId);
             
             if (!activeSub || !activeSub.endTime) {
                 remainingEl.textContent = '--:--';
                 remainingEl.className = 'text-7xl md:text-9xl clock-font tracking-tighter time-display color-normal';
+                reminderEl.classList.add('hidden');
                 return;
             }
 
@@ -377,6 +395,7 @@
             if (diffMs <= 0) {
                 remainingEl.textContent = '00:00';
                 remainingEl.className = 'text-7xl md:text-9xl clock-font tracking-tighter time-display color-stage3';
+                reminderEl.classList.add('hidden');
                 return;
             }
 
@@ -386,7 +405,19 @@
 
             remainingEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
-            // 判斷顏色階段 (分鐘數換算毫秒)
+            // 大字幕提醒邏輯 (小於等於5分鐘且大於1分鐘 -> 顯示 5; 小於等於1分鐘且大於0 -> 顯示 1)
+            // 這裡抓得更精準：4分59秒顯示 5，還是只有在 5分0秒~4分01秒顯示？
+            // 通常是「最後5分鐘」意即 totalSeconds <= 300
+            if (totalSeconds <= 300 && totalSeconds > 60) {
+                reminderMinEl.textContent = '5';
+                reminderEl.classList.remove('hidden');
+            } else if (totalSeconds <= 60 && totalSeconds > 0) {
+                reminderMinEl.textContent = '1';
+                reminderEl.classList.remove('hidden');
+            } else {
+                reminderEl.classList.add('hidden');
+            }
+
             const stage3Ms = (examData.stages.stage3 || 1) * 60 * 1000;
             const stage2Ms = (examData.stages.stage2 || 5) * 60 * 1000;
             const stage1Ms = (examData.stages.stage1 || 10) * 60 * 1000;
@@ -406,7 +437,6 @@
         // ================= 後台設定邏輯 =================
 
         function openSettings() {
-            // 深拷貝排程供編輯
             editingSchedule = JSON.parse(JSON.stringify(examData.schedule));
             renderSettingScheduleList();
 
@@ -425,21 +455,20 @@
         }
 
         function saveSettings() {
-            // 儲存排程 (從 DOM 取回目前值)
             const listEl = document.getElementById('setting-schedule-list');
             const rows = listEl.querySelectorAll('.schedule-row');
             const newSchedule = [];
             rows.forEach((row, idx) => {
                 const id = row.dataset.id;
                 const subject = row.querySelector('.sch-subject').value;
+                const startTime = row.querySelector('.sch-starttime').value;
                 const endTime = row.querySelector('.sch-endtime').value;
-                if(subject && endTime) {
-                    newSchedule.push({ id, subject, endTime });
+                if(subject && startTime && endTime) {
+                    newSchedule.push({ id, subject, startTime, endTime });
                 }
             });
             examData.schedule = newSchedule;
 
-            // 確保 activeId 還有效
             if (!examData.schedule.find(s => s.id === examData.activeScheduleId) && examData.schedule.length > 0) {
                 examData.activeScheduleId = examData.schedule[0].id;
             } else if (examData.schedule.length === 0) {
@@ -454,13 +483,12 @@
             examData.actual = document.getElementById('setting-actual').value;
             examData.notes = document.getElementById('setting-notes').value;
 
-            localStorage.setItem('examRemindersDataAdvanced', JSON.stringify(examData));
+            localStorage.setItem('examRemindersDataAdvanced2', JSON.stringify(examData));
 
             updateDisplayFromData();
             closeSettings();
         }
 
-        // 後台排程編輯功能
         function renderSettingScheduleList() {
             const container = document.getElementById('setting-schedule-list');
             container.innerHTML = '';
@@ -475,7 +503,9 @@
                 row.innerHTML = `
                     <div class="font-bold text-gray-500 w-6 text-center">${index+1}</div>
                     <input type="text" class="sch-subject flex-grow border rounded px-2 py-1 text-sm focus:border-blue-500 outline-none" value="${item.subject}" placeholder="科目名稱">
-                    <input type="time" class="sch-endtime w-28 border rounded px-2 py-1 text-sm focus:border-blue-500 outline-none" value="${item.endTime}">
+                    <input type="time" class="sch-starttime w-24 border rounded px-2 py-1 text-sm focus:border-blue-500 outline-none" value="${item.startTime || '08:00'}">
+                    <span class="text-gray-400">-</span>
+                    <input type="time" class="sch-endtime w-24 border rounded px-2 py-1 text-sm focus:border-blue-500 outline-none" value="${item.endTime || '09:00'}">
                     <button onclick="removeScheduleItem('${item.id}')" class="text-red-500 hover:text-red-700 p-1"><i class="fa-solid fa-trash-can"></i></button>
                 `;
                 container.appendChild(row);
@@ -484,20 +514,32 @@
 
         function addScheduleItem() {
             const newId = Date.now().toString();
-            editingSchedule.push({ id: newId, subject: '', endTime: '' });
+            // Default 1 hour duration logic just for UX
+            let sTime = '08:00';
+            let eTime = '09:00';
+            if (editingSchedule.length > 0) {
+                const lastEnd = editingSchedule[editingSchedule.length-1].endTime;
+                if (lastEnd) {
+                    sTime = lastEnd;
+                    let [h, m] = sTime.split(':').map(Number);
+                    h = (h + 1) % 24;
+                    eTime = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                }
+            }
+
+            editingSchedule.push({ id: newId, subject: '', startTime: sTime, endTime: eTime });
             renderSettingScheduleList();
             
-            // 捲動到底部
             const listEl = document.getElementById('setting-schedule-list');
             listEl.scrollTop = listEl.scrollHeight;
         }
 
         function removeScheduleItem(id) {
-            // 同步將畫面上的值存回 editingSchedule
             const rows = document.querySelectorAll('.schedule-row');
             editingSchedule = Array.from(rows).map(row => ({
                 id: row.dataset.id,
                 subject: row.querySelector('.sch-subject').value,
+                startTime: row.querySelector('.sch-starttime').value,
                 endTime: row.querySelector('.sch-endtime').value
             }));
 
