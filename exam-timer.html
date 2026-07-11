@@ -59,6 +59,14 @@
             background-color: #f3f4f6;
         }
 
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
         #gear-btn {
             position: fixed;
             bottom: 20px;
@@ -472,15 +480,41 @@
             document.getElementById('count-absent').textContent = absent;
             document.getElementById('count-absent').className = absent > 0 ? "text-5xl md:text-6xl font-extrabold text-red-600 mt-1 md:mt-2" : "text-5xl md:text-6xl font-extrabold text-gray-400 mt-1 md:mt-2";
 
-            const notesList = document.getElementById('notes-list');
-            notesList.innerHTML = '';
-            if (examData.notes) {
-                examData.notes.split('\n').filter(n => n.trim()).forEach(note => {
+            if (window.notesInterval) {
+                clearInterval(window.notesInterval);
+                window.notesInterval = null;
+            }
+
+            const allNotes = examData.notes ? examData.notes.split('\n').filter(n => n.trim()) : [];
+            window.currentNotePage = 0;
+            const itemsPerPage = 2;
+
+            function renderNotesPage() {
+                const notesList = document.getElementById('notes-list');
+                notesList.innerHTML = '';
+                if (allNotes.length === 0) return;
+                
+                const startIndex = window.currentNotePage * itemsPerPage;
+                let pageNotes = allNotes.slice(startIndex, startIndex + itemsPerPage);
+                
+                pageNotes.forEach(note => {
                     const li = document.createElement('li');
-                    li.className = 'break-inside-avoid mb-5';
+                    li.className = 'break-inside-avoid mb-5 fade-in';
                     li.textContent = note;
                     notesList.appendChild(li);
                 });
+            }
+
+            renderNotesPage();
+
+            if (allNotes.length > itemsPerPage) {
+                // 每 15 秒輪播一次 (避免 5 分鐘過久導致有些學生看不到後面的注意事項)
+                // 若堅持要 5 分鐘，可改為 5 * 60 * 1000
+                window.notesInterval = setInterval(() => {
+                    const totalPages = Math.ceil(allNotes.length / itemsPerPage);
+                    window.currentNotePage = (window.currentNotePage + 1) % totalPages;
+                    renderNotesPage();
+                }, 15000); 
             }
 
             updateTimer();
