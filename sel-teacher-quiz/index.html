@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#fff8f2">
+  <meta name="description" content="用幾個教室情境，看看最近的你是哪一派老師。">
+  <title>你是哪一派老師？｜SEL 小測驗</title>
+  <style>
+    :root{color-scheme:light;--ink:#303447;--muted:#6e7180;--pink:#f29aa8;--purple:#9b8bd6;--blue:#79b9d5;--yellow:#f3c76c;--paper:#fffdf9;--line:#ece8e2}
+    *{box-sizing:border-box} body{margin:0;min-height:100vh;background:radial-gradient(circle at 12% 7%,#ffe7e7 0 9%,transparent 10%),radial-gradient(circle at 95% 30%,#e6f4f7 0 8%,transparent 9%),linear-gradient(145deg,#fff8f2,#f8f5ff);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI","Noto Sans TC",sans-serif}
+    button{font:inherit} .shell{width:min(100%,740px);margin:auto;padding:clamp(16px,4vw,34px) 16px 40px}.brand{display:flex;align-items:center;justify-content:center;gap:9px;margin:0 auto 17px;color:#777386;font-size:.9rem;font-weight:750;letter-spacing:.08em}.brand-mark{display:grid;place-items:center;width:34px;height:34px;border-radius:12px;background:#fff;box-shadow:0 3px 12px #55467a15;font-size:19px}
+    .card{background:var(--paper);border:1px solid #ffffffc9;border-radius:28px;box-shadow:0 20px 60px #55507114;padding:clamp(22px,6vw,48px);overflow:hidden;position:relative}.card:before{content:"";position:absolute;left:-30px;top:-48px;width:115px;height:115px;border-radius:50%;background:#ffe8e8;z-index:0}.card>*{position:relative}.eyebrow{color:#947fc9;font-weight:800;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase}.hero{text-align:center}.hero h1{font-size:clamp(2rem,8vw,3.35rem);line-height:1.18;margin:14px 0 12px;letter-spacing:.015em}.hero h1 em{font-style:normal;color:#df7189}.subtitle{font-size:clamp(1rem,3.7vw,1.15rem);color:var(--muted);line-height:1.75;max-width:470px;margin:0 auto}.mascot{font-size:clamp(3rem,13vw,5rem);margin:15px 0 7px;filter:drop-shadow(0 5px 2px #e6bbc133)}
+    .note{margin:20px auto 24px;padding:12px 15px;border-radius:15px;background:#f6f2ff;color:#6c6189;font-size:.91rem;line-height:1.55;max-width:500px}.primary,.secondary{min-height:54px;border:0;border-radius:17px;padding:13px 22px;font-weight:800;cursor:pointer;transition:transform .15s,box-shadow .15s}.primary{background:linear-gradient(135deg,#ed8fa2,#b391df);color:white;box-shadow:0 8px 18px #c388bd38}.primary:hover,.secondary:hover,.answer:hover{transform:translateY(-2px)}.primary:focus-visible,.secondary:focus-visible,.answer:focus-visible{outline:3px solid #5d91d5;outline-offset:3px}.start-actions{display:flex;justify-content:center}.privacy{font-size:.78rem;color:#92919b;margin:14px 0 0}
+    .quiz-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px}.step-label{font-size:.9rem;color:var(--muted);font-weight:700;white-space:nowrap}.progress{height:9px;background:#f0edf2;border-radius:9px;overflow:hidden;flex:1}.progress-fill{height:100%;width:0;background:linear-gradient(90deg,#f29aa8,#a291d8);border-radius:inherit;transition:width .3s}.question{font-size:clamp(1.35rem,5vw,1.8rem);line-height:1.45;margin:0 0 8px}.scenario{color:var(--muted);line-height:1.65;margin:0 0 22px}.answers{display:grid;gap:12px}.answer{width:100%;text-align:left;display:flex;align-items:flex-start;gap:13px;padding:15px 16px;min-height:68px;border:1.5px solid var(--line);border-radius:18px;background:#fff;color:var(--ink);line-height:1.5;cursor:pointer;transition:transform .15s,border-color .15s,background .15s}.answer:hover{border-color:#d9c8ee;background:#fffaff}.letter{flex:none;display:grid;place-items:center;width:30px;height:30px;border-radius:10px;background:#f7edf5;color:#a26d9c;font-weight:850}.answer-text{padding-top:3px}.question-dots{display:flex;justify-content:center;gap:7px;margin-top:21px}.dot{width:7px;height:7px;border-radius:50%;background:#e6e1eb}.dot.active{width:20px;border-radius:8px;background:#aa92d5}
+    .result{text-align:center}.result-icon{font-size:4rem;line-height:1.1;margin:8px 0}.result h2{font-size:clamp(1.8rem,7vw,2.7rem);margin:7px 0 10px}.result-quote{color:#8e76c0;font-weight:750;font-size:1.1rem;margin:0 0 15px}.result-copy{max-width:520px;margin:0 auto;color:var(--muted);line-height:1.8;text-align:left}.strength{margin:18px auto 0;padding:14px 16px;border-radius:16px;background:#fff5e7;color:#725e38;text-align:left;line-height:1.7;max-width:520px}.result-footer{margin-top:23px;display:flex;flex-wrap:wrap;justify-content:center;gap:10px}.secondary{background:#f3effa;color:#6c5b8c}.footnote{font-size:.78rem;color:#93919a;margin-top:18px}.hidden{display:none!important}
+    @media(max-width:430px){.shell{padding:12px 12px 26px}.brand{margin-bottom:12px}.card{border-radius:23px}.quiz-head{gap:9px;margin-bottom:17px}.step-label{font-size:.82rem}.answer{padding:13px;min-height:64px}.note{font-size:.87rem}.primary,.secondary{min-height:52px}}
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="brand"><span class="brand-mark">🌱</span>SEL 就在教室裡</div>
+    <section class="card hero" id="intro" aria-labelledby="title">
+      <div class="eyebrow">給每天用心陪伴孩子的你</div>
+      <div class="mascot" aria-hidden="true">🧑‍🏫✨</div>
+      <h1 id="title">你是哪一派<br><em>老師？</em></h1>
+      <p class="subtitle">從幾個教室情境出發，看看最近的你習慣怎麼回應，也發現自己已經擁有的力量。</p>
+      <div class="note">這不是人格測驗，也沒有標準答案。選最像「最近的你」的做法，約 2 分鐘完成。</div>
+      <div class="start-actions"><button class="primary" id="start">開始測驗　→</button></div>
+      <p class="privacy">不需登入，答案只留在這個頁面，不會被蒐集。</p>
+    </section>
+
+    <section class="card hidden" id="quiz" aria-live="polite" aria-labelledby="question-title">
+      <div class="quiz-head"><span class="step-label" id="step-label">第 1 題／8</span><div class="progress" role="progressbar" aria-label="作答進度" aria-valuemin="0" aria-valuemax="8" aria-valuenow="0"><div class="progress-fill" id="progress-fill"></div></div></div>
+      <h2 class="question" id="question-title"></h2><p class="scenario" id="scenario"></p>
+      <div class="answers" id="answers"></div><div class="question-dots" id="dots" aria-hidden="true"></div>
+    </section>
+
+    <section class="card result hidden" id="result" aria-live="polite" aria-labelledby="result-title">
+      <div class="eyebrow">最近的你，最常展現的是</div><div class="result-icon" id="result-icon" aria-hidden="true"></div>
+      <h2 id="result-title"></h2><p class="result-quote" id="result-quote"></p>
+      <div class="result-copy" id="result-copy"></div><div class="strength" id="result-strength"></div>
+      <div class="result-footer"><button class="primary" id="restart">再測一次</button><button class="secondary" id="share">分享結果</button></div>
+      <p class="footnote">每一種風格都有自己的力量；需要時，你也可以切換另一種方式。</p>
+    </section>
+  </main>
+<script>
+  const styles={
+    fire:{name:"熱血派",icon:"🔥",quote:"看到新點子，就想試試看！",copy:"你容易被新活動與孩子的好奇心點燃，願意先跨出一步，讓教室多一些新鮮的體驗。",strength:"你的力量：把熱情變成孩子看得見的學習動力。也記得留一點時間，看看活動後孩子真正學到了什麼。"},
+    plan:{name:"規劃派",icon:"🗂️",quote:"先把流程想清楚，心裡比較踏實。",copy:"你習慣先整理目標、步驟與可能狀況，讓教學更有方向，也讓學生知道接下來要做什麼。",strength:"你的力量：讓複雜的事情變得有條理。遇到突發變化時，也可以允許自己先調整一小步。"},
+    care:{name:"操心派",icon:"💗",quote:"孩子的事情，我總會多想一點。",copy:"你很留意學生的情緒與需要，常能先看見孩子沒有說出口的困難，也願意多陪一會兒。",strength:"你的力量：用關心讓孩子感到被接住。別忘了也照顧自己的感受，必要時和夥伴一起分擔。"},
+    flex:{name:"彈性派",icon:"🪁",quote:"碰到變化，就邊走邊調整。",copy:"你能觀察現場、回應變化，不會只被原本的計畫綁住，願意依學生狀況換個方式再試一次。",strength:"你的力量：在不確定裡找到可行的下一步。停下來回顧一下，也能幫你看見這次調整帶來的改變。"}
+  };
+  const questions=[
+    {q:"臨時多出一段課堂時間，你會先……",s:"教學現場忽然有了空檔，最近的你比較可能怎麼做？",a:[["fire","拿出一直想試的新活動，帶孩子玩中學"],["plan","快速盤點進度，安排一個剛好接得上的任務"],["care","看看孩子的狀態，聊聊他們現在需要什麼"],["flex","看現場氣氛決定，可能先休息再調整後續安排"]]},
+    {q:"學生提醒你：「老師，我不太懂。」你會……",s:"你已經說明過一次，孩子仍然卡住。",a:[["fire","換一種有趣的示範，讓大家一起試試看"],["plan","重新拆解步驟，確認是哪一段還不清楚"],["care","先問問他卡在哪裡，陪他慢慢說出困難"],["flex","觀察他的反應，改用當下最合適的方式說明"]]},
+    {q:"活動開始前，發現材料少了一份，你會……",s:"全班都已經就定位，時間也快到了。",a:[["fire","把現有材料改成小組共用，照樣開始"],["plan","按原先備案調整分組與材料流程"],["care","先確認少材料的學生會不會覺得不方便"],["flex","邊開始邊重新分配，視情況改動規則"]]},
+    {q:"最近有一個新的教學工具，你會……",s:"同事分享了一個看起來很有趣的工具。",a:[["fire","立刻找一堂課試用，看看會發生什麼"],["plan","先研究功能和操作流程，再安排使用時機"],["care","想想孩子是否都能順利使用、需要什麼協助"],["flex","先簡單摸摸看，有適合的時機再帶進課堂"]]},
+    {q:"學生上課一直和同學說話，你比較可能……",s:"提醒過兩次後，他還是忍不住和旁邊同學聊天。",a:[["fire","直接清楚提醒，先把全班注意力帶回來"],["plan","按班級原本約定處理，讓規則保持一致"],["care","想想他是不是有需要或遇到什麼狀況"],["flex","先靠近或用眼神提醒，再看情況決定下一步"]]},
+    {q:"一個活動效果和預期不同，你會……",s:"學生反應比預期冷淡，原本的流程有點卡住。",a:[["fire","加一個互動挑戰，重新把氣氛帶起來"],["plan","記下卡住的環節，課後重新整理活動步驟"],["care","先留意學生的感受，問問他們怎麼想"],["flex","當下換個做法，依學生反應調整活動"]]},
+    {q:"下課後，有學生看起來悶悶不樂，你會……",s:"你還有事情要忙，但注意到他的表情不太對。",a:[["fire","想個輕鬆的方式逗逗他，邀他一起做點事"],["plan","找時間和他談談，安排後續關心的步驟"],["care","先關心他怎麼了，陪他把感受說出來"],["flex","看他當下願不願意說，先用舒服的方式接近"]]},
+    {q:"要設計一個新的班級活動，你通常會……",s:"還沒有固定做法，一切都可以從頭開始。",a:[["fire","先抓到有趣的點子，做了再從回饋中修正"],["plan","先定目標、流程和材料，再一步步準備"],["care","先想想每個孩子能不能參與、需要什麼支持"],["flex","先有個方向，依現場狀況保留調整空間"]]}
+  ];
+  let index=0, answers=[];
+  const intro=document.querySelector('#intro'),quiz=document.querySelector('#quiz'),result=document.querySelector('#result');
+  const fill=document.querySelector('#progress-fill'),bar=document.querySelector('.progress');
+  function render(){const item=questions[index];document.querySelector('#step-label').textContent=`第 ${index+1} 題／${questions.length}`;document.querySelector('#question-title').textContent=item.q;document.querySelector('#scenario').textContent=item.s;fill.style.width=`${index/questions.length*100}%`;bar.setAttribute('aria-valuenow',String(index));document.querySelector('#answers').innerHTML=item.a.map((a,n)=>`<button class="answer" data-style="${a[0]}"><span class="letter">${String.fromCharCode(65+n)}</span><span class="answer-text">${a[1]}</span></button>`).join('');document.querySelector('#dots').innerHTML=questions.map((_,n)=>`<span class="dot ${n===index?'active':''}"></span>`).join('');document.querySelectorAll('.answer').forEach(b=>b.addEventListener('click',()=>choose(b.dataset.style)));}
+  function choose(style){answers.push(style);if(index<questions.length-1){index++;render();window.scrollTo({top:0,behavior:'smooth'});}else showResult();}
+  function showResult(){const totals={fire:0,plan:0,care:0,flex:0};answers.forEach(k=>totals[k]++);const top=Math.max(...Object.values(totals));const winners=Object.keys(totals).filter(k=>totals[k]===top);const winner=winners[winners.length===1?0:answers.slice().reverse().find(k=>winners.includes(k))?winners.indexOf(answers.slice().reverse().find(k=>winners.includes(k))):0];const d=styles[winner];quiz.classList.add('hidden');result.classList.remove('hidden');document.querySelector('#result-icon').textContent=d.icon;document.querySelector('#result-title').textContent=`${d.name}老師`;document.querySelector('#result-quote').textContent=`「${d.quote}」`;document.querySelector('#result-copy').textContent=d.copy;document.querySelector('#result-strength').textContent=d.strength;window.scrollTo({top:0,behavior:'smooth'});}
+  document.querySelector('#start').addEventListener('click',()=>{intro.classList.add('hidden');quiz.classList.remove('hidden');render();});
+  document.querySelector('#restart').addEventListener('click',()=>{index=0;answers=[];result.classList.add('hidden');intro.classList.remove('hidden');window.scrollTo({top:0,behavior:'smooth'});});
+  document.querySelector('#share').addEventListener('click',async()=>{const text=`我是${document.querySelector('#result-title').textContent}！一起來做「你是哪一派老師？」SEL 小測驗`;try{if(navigator.share)await navigator.share({title:'你是哪一派老師？',text,url:location.href});else{await navigator.clipboard.writeText(`${text}\n${location.href}`);document.querySelector('#share').textContent='已複製分享內容';}}catch(e){}});
+</script>
+</body>
+</html>
